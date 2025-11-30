@@ -1,7 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import * as fc from 'fast-check'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { axiosInstance } from './request'
-import { setStorage, removeStorage } from '@/utils/storage'
+import { removeStorage } from '@/utils/storage'
 
 // **Feature: h5-barcode-print-system, Property 11: 请求拦截器 Token 注入**
 // **Validates: Requirements 2.2**
@@ -15,7 +14,8 @@ describe('请求拦截器', () => {
     it('未登录状态下的请求不应包含 Authorization 头', () => {
       removeStorage('token')
       
-      const requestInterceptor = axiosInstance.interceptors.request.handlers[0]
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const requestInterceptor = (axiosInstance.interceptors.request as any).handlers[0]
       if (!requestInterceptor || !requestInterceptor.fulfilled) {
         return
       }

@@ -40,7 +40,7 @@ const Login = () => {
       // 跳转到之前的页面或首页
       const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/home'
       navigate(from, { replace: true })
-    } catch (error) {
+    } catch {
       // 错误已在拦截器中处理
     } finally {
       setLoading(false)

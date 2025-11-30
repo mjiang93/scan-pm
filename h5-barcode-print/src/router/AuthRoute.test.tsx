@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import * as fc from 'fast-check'
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import AuthRoute from './AuthRoute'
 import { useUserStore } from '@/stores'

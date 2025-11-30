@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import Home from './index'
 import { useUserStore, usePrinterStore } from '@/stores'
-import * as printerService from '@/services/printer'
 
 vi.mock('@/services/printer')
 

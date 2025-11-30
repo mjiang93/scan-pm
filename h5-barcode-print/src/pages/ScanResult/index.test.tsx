@@ -1,10 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import * as fc from 'fast-check'
-import { render, waitFor } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
-import ScanResult from './index'
-import * as barcodeService from '@/services/barcode'
-import type { BarcodeInfo } from '@/types/barcode'
 
 // **Feature: h5-barcode-print-system, Property 12: 搜索结果列表渲染**
 // **Validates: Requirements 6.1**

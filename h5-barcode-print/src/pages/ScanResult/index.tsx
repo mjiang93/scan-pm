@@ -15,33 +15,33 @@ const ScanResult = () => {
   const [results, setResults] = useState<BarcodeInfo[]>([])
 
   useEffect(() => {
-    if (code) {
-      loadResults()
-    }
-  }, [code])
+    if (!code) return
 
-  const loadResults = async () => {
-    setLoading(true)
-    try {
-      const data = await searchBarcode(code)
-      setResults(data)
-    } catch {
-      // 使用模拟数据
-      const mockResults: BarcodeInfo[] = [
-        {
-          id: '1',
-          code: code,
-          type: 'body',
-          productName: '示例产品A',
-          productCode: 'P001',
-          createTime: new Date().toISOString(),
-        },
-      ]
-      setResults(mockResults)
-    } finally {
-      setLoading(false)
+    const loadResults = async () => {
+      setLoading(true)
+      try {
+        const data = await searchBarcode(code)
+        setResults(data)
+      } catch {
+        // 使用模拟数据
+        const mockResults: BarcodeInfo[] = [
+          {
+            id: '1',
+            code: code,
+            type: 'body',
+            productName: '示例产品A',
+            productCode: 'P001',
+            createTime: new Date().toISOString(),
+          },
+        ]
+        setResults(mockResults)
+      } finally {
+        setLoading(false)
+      }
     }
-  }
+
+    loadResults()
+  }, [code])
 
   const handleItemClick = (item: BarcodeInfo) => {
     // 根据类型跳转到对应页面
