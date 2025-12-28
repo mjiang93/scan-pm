@@ -11,6 +11,7 @@ const ScanResult = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const code = searchParams.get('code') || ''
+  const type = searchParams.get('type') || 'body'
   const [loading, setLoading] = useState(true)
   const [results, setResults] = useState<BarcodeInfo[]>([])
 
@@ -28,7 +29,7 @@ const ScanResult = () => {
           {
             id: '1',
             code: code,
-            type: 'body',
+            type: type as any,
             productName: '示例产品A',
             productCode: 'P001',
             createTime: new Date().toISOString(),
@@ -41,16 +42,11 @@ const ScanResult = () => {
     }
 
     loadResults()
-  }, [code])
+  }, [code, type])
 
   const handleItemClick = (item: BarcodeInfo) => {
-    // 根据类型跳转到对应页面
-    const pathMap = {
-      body: '/print-body',
-      inner: '/print-inner',
-      label: '/print-label',
-    }
-    navigate(`${pathMap[item.type]}?id=${item.id}`)
+    // 跳转到条码详情页面
+    navigate(`/barcode-detail?code=${encodeURIComponent(item.code)}&type=${item.type}`)
   }
 
   const typeLabels = {

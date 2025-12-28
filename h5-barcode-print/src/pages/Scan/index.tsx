@@ -1,6 +1,6 @@
 // 扫码页面
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Input, Button, Toast } from 'antd-mobile'
 import { PageContainer } from '@/components'
 import Scanner from '@/components/Scanner'
@@ -9,13 +9,15 @@ import styles from './index.module.less'
 
 const Scan = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const type = searchParams.get('type') || 'body' // 默认为本体码
   const [showManual, setShowManual] = useState(false)
   const [manualCode, setManualCode] = useState('')
   const [permissionDenied, setPermissionDenied] = useState(false)
 
   const handleScan = (code: string) => {
     Toast.show({ content: `扫描成功: ${code}` })
-    navigate(`/scan-result?code=${encodeURIComponent(code)}`)
+    navigate(`/scan-result?code=${encodeURIComponent(code)}&type=${type}`)
   }
 
   const handleError = (error: string) => {
@@ -30,11 +32,20 @@ const Scan = () => {
       Toast.show({ content: '请输入条码' })
       return
     }
-    navigate(`/scan-result?code=${encodeURIComponent(manualCode)}`)
+    navigate(`/scan-result?code=${encodeURIComponent(manualCode)}&type=${type}`)
+  }
+
+  const getTitle = () => {
+    const typeMap = {
+      body: '扫码生成SN码',
+      inner: '扫SN打印内包装',
+      label: '扫内包生成外装'
+    }
+    return typeMap[type as keyof typeof typeMap] || '扫码'
   }
 
   return (
-    <PageContainer title="扫码">
+    <PageContainer title={getTitle()}>
       <div className={styles.scan}>
         {permissionDenied || showManual ? (
           <div className={styles.manual}>

@@ -16,6 +16,8 @@ const instance: AxiosInstance = axios.create({
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
+    'accept': '*/*',
+    'accept-language': 'zh-CN,zh;q=0.9',
   },
 })
 
@@ -41,21 +43,21 @@ instance.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
     const { data } = response
     
-    // 业务成功
-    if (data.code === 0 || data.code === 200) {
+    // 业务成功 - 根据新的API规范，code === 0 为成功
+    if (data.code === 0) {
       return data.data as unknown as AxiosResponse
     }
     
-    // 业务错误
+    // 业务错误 - code !== 0 都是失败状态
     const config = response.config as RequestConfig
     if (!config.skipErrorHandler) {
       Toast.show({
         icon: 'fail',
-        content: data.message || '请求失败',
+        content: data.errorMsg || data.msg || '请求失败',
       })
     }
     
-    return Promise.reject(new Error(data.message || '请求失败'))
+    return Promise.reject(new Error(data.errorMsg || data.msg || '请求失败'))
   },
   (error) => {
     const config = error.config as RequestConfig
@@ -64,7 +66,14 @@ instance.interceptors.response.use(
     if (error.response?.status === 401) {
       removeStorage('token')
       removeStorage('userInfo')
-      window.location.href = '/login'
+      Toast.show({
+        icon: 'fail',
+        content: '登录已过期，请重新登录',
+      })
+      // 延迟跳转，让用户看到提示
+      setTimeout(() => {
+        window.location.href = '/login'
+      }, 1500)
       return Promise.reject(error)
     }
     
@@ -84,10 +93,12 @@ instance.interceptors.response.use(
             message = '服务器错误'
             break
           default:
-            message = error.response.data?.message || message
+            message = error.response.data?.errorMsg || error.response.data?.msg || message
         }
       } else if (error.code === 'ECONNABORTED') {
         message = '请求超时，请检查网络'
+      } else if (error.message === 'Network Error') {
+        message = '网络连接失败，请检查网络设置'
       }
       
       Toast.show({

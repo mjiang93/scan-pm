@@ -1,1 +1,10 @@
 // 页面组件导出
+export { default as Home } from './Home'
+export { default as Login } from './Login'
+export { default as Scan } from './Scan'
+export { default as ScanResult } from './ScanResult'
+export { default as BarcodeList } from './BarcodeList'
+export { default as BarcodeDetail } from './BarcodeDetail'
+export { default as PrintBody } from './PrintBody'
+export { default as PrintInner } from './PrintInner'
+export { default as PrintLabel } from './PrintLabel'

@@ -31,9 +31,19 @@ const Login = () => {
 
     setLoading(true)
     try {
-      const result = await login(values)
+      // 将 username 映射为 userId
+      const result = await login({
+        userId: values.username,
+        password: values.password
+      })
+      
       setToken(result.token)
-      setUserInfo(result.userInfo)
+      // 根据新的API响应结构设置用户信息
+      setUserInfo({
+        userId: result.userId,
+        userName: result.userName,
+        status: result.status
+      })
       
       Toast.show({ icon: 'success', content: '登录成功' })
       
@@ -58,6 +68,10 @@ const Login = () => {
       <Form
         className={styles.form}
         onFinish={handleSubmit}
+        initialValues={{
+          username: 'capo', // 默认测试用户名
+          password: '123456' // 默认测试密码
+        }}
         footer={
           <Button
             block

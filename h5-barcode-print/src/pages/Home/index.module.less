@@ -1,15 +1,128 @@
 .home {
-  padding: 16px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  display: flex;
+  flex-direction: column;
 }
 
-.userInfo {
+.header {
   background: #fff;
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  font-size: 16px;
+  padding: 24px 20px 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 20px 20px;
+  margin-bottom: 20px;
 }
 
-.menu {
-  margin-top: 16px;
+.logo {
+  margin-bottom: 12px;
+}
+
+.logoIcon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.welcome {
+  font-size: 16px;
+  color: #666;
+  font-weight: 400;
+}
+
+.content {
+  flex: 1;
+  padding: 0 20px;
+}
+
+.menuCard {
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: none;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.cardContent {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  background: #fff;
+}
+
+.cardIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(22, 119, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  font-size: 24px;
+}
+
+.cardText {
+  flex: 1;
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.cardSubtitle {
+  font-size: 14px;
+  color: #999;
+}
+
+.cardArrow {
+  font-size: 20px;
+  color: #ccc;
+  font-weight: 300;
+}
+
+.footer {
+  padding: 20px;
+  margin-top: auto;
+}
+
+.logoutBtn {
+  border-radius: 12px;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 500;
+  border: 2px solid #ff8f00;
+  color: #ff8f00;
+  background: #fff;
+  
+  &:active {
+    background: #fff5e6;
+  }
 }

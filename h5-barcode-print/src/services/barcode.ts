@@ -39,3 +39,10 @@ export function getPrintHistory(params?: {
 }): Promise<{ list: PrintTask[]; total: number }> {
   return request.get('/barcode/history', { params })
 }
+
+/**
+ * 获取条码详情
+ */
+export function getBarcodeDetail(code: string): Promise<any> {
+  return request.get(`/barcode/detail/${code}`)
+}

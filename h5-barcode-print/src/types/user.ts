@@ -1,18 +1,18 @@
 // 用户相关类型
 export interface UserInfo {
-  id: string
-  username: string
-  name: string
-  avatar?: string
-  role: string
+  userId: string
+  userName: string
+  status: number
 }
 
 export interface LoginParams {
-  username: string
+  userId: string
   password: string
 }
 
 export interface LoginResult {
   token: string
-  userInfo: UserInfo
+  userId: string
+  userName: string
+  status: number
 }
