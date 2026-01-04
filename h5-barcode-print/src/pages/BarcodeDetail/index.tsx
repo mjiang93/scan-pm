@@ -1,8 +1,11 @@
 // 条码详情页面
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Button, Card, Toast } from 'antd-mobile'
+import { Button, Card, Toast, Picker, DatePicker, Dialog, Input } from 'antd-mobile'
+import type { PickerValue } from 'antd-mobile/es/components/picker'
 import { PageContainer, Loading } from '@/components'
+import { getBarcodeDetail, editAccessory, editDelivery, editDrawingVersion, bindFactoryCode } from '@/services/barcode'
+import { useUserStore } from '@/stores'
 import styles from './index.module.less'
 
 interface BarcodeDetail {
@@ -28,48 +31,124 @@ interface BarcodeDetail {
 const BarcodeDetail = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const code = searchParams.get('code') || ''
+  const id = searchParams.get('id') || ''
+  const factoryCodeFromScan = searchParams.get('factoryCode') || ''
   const [loading, setLoading] = useState(true)
   const [detail, setDetail] = useState<BarcodeDetail | null>(null)
+  const [attachmentPickerVisible, setAttachmentPickerVisible] = useState(false)
+  const [deliveryDatePickerVisible, setDeliveryDatePickerVisible] = useState(false)
+  const [drawingVersionDialogVisible, setDrawingVersionDialogVisible] = useState(false)
+  const [drawingVersionInput, setDrawingVersionInput] = useState('')
+  const { userInfo } = useUserStore()
 
   useEffect(() => {
-    if (!code) return
+    if (!id) return
 
     const loadDetail = async () => {
       setLoading(true)
       try {
-        // const data = await getBarcodeDetail(code)
-        // setDetail(data)
-        // 使用模拟数据
-        const mockDetail: BarcodeDetail = {
-          projectCode: '099302937',
-          productCode: '099302930001',
-          productionDate: '2025-07-01',
-          productionDateEnd: '2025-07-30',
-          productionLine: 'H3',
-          techVersion: 'V1.0',
-          nameType: '系统电源-3相交流380V-无',
-          quantity: 100,
-          unit: 'SEC',
-          supplierCode: 'BDI32421342',
-          factoryCode: '167274671',
-          snCode: 'S000001244001IP9302A01RG52PA01',
-          code09: '099302A01RG5/A01/1124A01001',
-          materialCode: '099302930001',
-          drawingVersion: 'A001',
-          attachments: 10,
-          deliveryDate: '2025-09-01'
+        const data = await getBarcodeDetail(id)
+        // 映射API返回的数据到组件需要的格式
+        const mappedDetail: BarcodeDetail = {
+          projectCode: data.projectCode || '',
+          productCode: data.materialCode || '',
+          productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
+          productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
+          productionLine: data.lineName || '',
+          techVersion: data.technicalVersion || '',
+          nameType: data.nameModel || '',
+          quantity: data.cnt || 0,
+          unit: data.unit || '',
+          supplierCode: data.supplierCode || '',
+          factoryCode: data.factoryCode || '',
+          snCode: data.codeSn || '',
+          code09: data.code09 || '',
+          materialCode: data.materialCode || '',
+          drawingVersion: data.drawingVersion || '',
+          attachments: data.accessoryCnt || 0,
+          deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : ''
         }
-        setDetail(mockDetail)
+        setDetail(mappedDetail)
       } catch (error) {
         console.error('加载条码详情失败:', error)
+        Toast.show({
+          icon: 'fail',
+          content: '加载详情失败'
+        })
       } finally {
         setLoading(false)
       }
     }
 
     loadDetail()
-  }, [code])
+  }, [id])
+
+  // 处理从扫码页面返回的出厂码绑定
+  useEffect(() => {
+    if (!factoryCodeFromScan || !id || !userInfo) return
+
+    let isMounted = true
+    
+    const handleBindFactoryCode = async () => {
+      try {
+        await bindFactoryCode({
+          id,
+          factoryCode: factoryCodeFromScan,
+          operator: userInfo.userName || 'unknown'
+        })
+        
+        if (!isMounted) return
+        
+        Toast.show({
+          icon: 'success',
+          content: '绑定MOM出厂码成功'
+        })
+        
+        // 重新加载详情以显示最新的出厂码
+        const data = await getBarcodeDetail(id)
+        
+        if (!isMounted) return
+        
+        const mappedDetail: BarcodeDetail = {
+          projectCode: data.projectCode || '',
+          productCode: data.materialCode || '',
+          productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
+          productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
+          productionLine: data.lineName || '',
+          techVersion: data.technicalVersion || '',
+          nameType: data.nameModel || '',
+          quantity: data.cnt || 0,
+          unit: data.unit || '',
+          supplierCode: data.supplierCode || '',
+          factoryCode: data.factoryCode || '',
+          snCode: data.codeSn || '',
+          code09: data.code09 || '',
+          materialCode: data.materialCode || '',
+          drawingVersion: data.drawingVersion || '',
+          attachments: data.accessoryCnt || 0,
+          deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : ''
+        }
+        setDetail(mappedDetail)
+        
+        // 清除URL中的factoryCode参数
+        window.history.replaceState({}, '', `/barcode-detail?id=${id}`)
+      } catch (error) {
+        if (!isMounted) return
+        
+        console.error('绑定MOM出厂码失败:', error)
+        Toast.show({
+          icon: 'fail',
+          content: '绑定MOM出厂码失败'
+        })
+      }
+    }
+
+    handleBindFactoryCode()
+    
+    return () => {
+      isMounted = false
+    }
+  }, [factoryCodeFromScan, id, userInfo])
 
   const handlePrint = () => {
     Toast.show({ content: '开始打印...' })
@@ -81,21 +160,213 @@ const BarcodeDetail = () => {
   }
 
   const handleAddAttachment = () => {
-    Toast.show({ content: '添加附件功能开发中...' })
+    setAttachmentPickerVisible(true)
+  }
+
+  const handleAttachmentConfirm = async (value: PickerValue[]) => {
+    if (!value || value.length === 0 || value[0] === null) {
+      return
+    }
+
+    const accessoryCnt = typeof value[0] === 'string' ? parseInt(value[0]) : value[0]
+    
+    try {
+      await editAccessory({
+        accessoryCnt,
+        ids: [parseInt(id)],
+        operator: userInfo?.userName || 'unknown'
+      })
+      
+      Toast.show({
+        icon: 'success',
+        content: '附件数量修改成功'
+      })
+      
+      // 重新加载详情
+      const data = await getBarcodeDetail(id)
+      const mappedDetail: BarcodeDetail = {
+        projectCode: data.projectCode || '',
+        productCode: data.materialCode || '',
+        productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
+        productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
+        productionLine: data.lineName || '',
+        techVersion: data.technicalVersion || '',
+        nameType: data.nameModel || '',
+        quantity: data.cnt || 0,
+        unit: data.unit || '',
+        supplierCode: data.supplierCode || '',
+        factoryCode: data.factoryCode || '',
+        snCode: data.codeSn || '',
+        code09: data.code09 || '',
+        materialCode: data.materialCode || '',
+        drawingVersion: data.drawingVersion || '',
+        attachments: data.accessoryCnt || 0,
+        deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : ''
+      }
+      setDetail(mappedDetail)
+    } catch (error) {
+      console.error('修改附件数量失败:', error)
+      Toast.show({
+        icon: 'fail',
+        content: '修改附件数量失败'
+      })
+    }
   }
 
   const handleAddPaperVersion = () => {
-    Toast.show({ content: '添加图纸版本功能开发中...' })
+    setDrawingVersionInput(detail?.drawingVersion || '')
+    setDrawingVersionDialogVisible(true)
+  }
+
+  const handleDrawingVersionConfirm = async () => {
+    if (!drawingVersionInput.trim()) {
+      Toast.show({
+        icon: 'fail',
+        content: '请输入图纸版本'
+      })
+      return
+    }
+
+    try {
+      await editDrawingVersion({
+        id,
+        drawingVersion: drawingVersionInput,
+        operator: userInfo?.userName || 'unknown'
+      })
+      
+      Toast.show({
+        icon: 'success',
+        content: '图纸版本修改成功'
+      })
+      
+      setDrawingVersionDialogVisible(false)
+      
+      // 重新加载详情
+      const data = await getBarcodeDetail(id)
+      const mappedDetail: BarcodeDetail = {
+        projectCode: data.projectCode || '',
+        productCode: data.materialCode || '',
+        productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
+        productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
+        productionLine: data.lineName || '',
+        techVersion: data.technicalVersion || '',
+        nameType: data.nameModel || '',
+        quantity: data.cnt || 0,
+        unit: data.unit || '',
+        supplierCode: data.supplierCode || '',
+        factoryCode: data.factoryCode || '',
+        snCode: data.codeSn || '',
+        code09: data.code09 || '',
+        materialCode: data.materialCode || '',
+        drawingVersion: data.drawingVersion || '',
+        attachments: data.accessoryCnt || 0,
+        deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : ''
+      }
+      setDetail(mappedDetail)
+    } catch (error) {
+      console.error('修改图纸版本失败:', error)
+      Toast.show({
+        icon: 'fail',
+        content: '修改图纸版本失败'
+      })
+    }
+  }
+
+  const handleEditDeliveryDate = () => {
+    setDeliveryDatePickerVisible(true)
+  }
+
+  const handleDeliveryDateConfirm = async (value: Date) => {
+    try {
+      // 转换为ISO格式字符串
+      const deliveryDate = value.toISOString()
+      
+      await editDelivery({
+        deliveryDate,
+        ids: [parseInt(id)],
+        operator: userInfo?.userName || 'unknown'
+      })
+      
+      Toast.show({
+        icon: 'success',
+        content: '送货日期修改成功'
+      })
+      
+      // 重新加载详情
+      const data = await getBarcodeDetail(id)
+      const mappedDetail: BarcodeDetail = {
+        projectCode: data.projectCode || '',
+        productCode: data.materialCode || '',
+        productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
+        productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
+        productionLine: data.lineName || '',
+        techVersion: data.technicalVersion || '',
+        nameType: data.nameModel || '',
+        quantity: data.cnt || 0,
+        unit: data.unit || '',
+        supplierCode: data.supplierCode || '',
+        factoryCode: data.factoryCode || '',
+        snCode: data.codeSn || '',
+        code09: data.code09 || '',
+        materialCode: data.materialCode || '',
+        drawingVersion: data.drawingVersion || '',
+        attachments: data.accessoryCnt || 0,
+        deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : ''
+      }
+      setDetail(mappedDetail)
+    } catch (error) {
+      console.error('修改送货日期失败:', error)
+      Toast.show({
+        icon: 'fail',
+        content: '修改送货日期失败'
+      })
+    }
   }
 
   const handleEdit = () => {
-    Toast.show({ content: '编辑功能开发中...' })
+    navigate(`/barcode-edit?id=${id}`)
   }
 
   const handlePrintBody = () => {
-    // 跳转到打印本体码页面，传递当前条码信息
-    navigate(`/print-body?code=${encodeURIComponent(code)}&from=detail`)
+    // 跳转到打印本体码页面，传递当前条码ID
+    navigate(`/print-body?id=${encodeURIComponent(id)}&from=detail`)
   }
+
+  const handlePrintInner = () => {
+    // 跳转到打印内包装码页面，传递当前条码ID
+    navigate(`/print-inner?id=${encodeURIComponent(id)}&from=detail`)
+  }
+
+  const handlePrintLabel = () => {
+    // 跳转到收货外标签码页面，传递当前条码ID
+    navigate(`/print-label?id=${encodeURIComponent(id)}&from=detail`)
+  }
+
+  const handleBindMomCode = () => {
+    // 跳转到扫码页面，传递当前条码ID和类型
+    navigate(`/scan?type=mom&id=${encodeURIComponent(id)}`)
+  }
+
+  // 创建右侧按钮元素
+  const renderRightButton = () => (
+    <span 
+      onClick={(e) => {
+        e.stopPropagation()
+        handleBindMomCode()
+      }}
+      style={{ 
+        color: '#1677ff', 
+        fontSize: '14px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px'
+      }}
+    >
+      绑定MOM出厂码
+      <span style={{ fontSize: '16px', color: '#666' }}>⛶</span>
+    </span>
+  )
 
   if (loading) {
     return <Loading loading fullscreen />
@@ -116,13 +387,8 @@ const BarcodeDetail = () => {
 
   return (
     <PageContainer 
-      title="条码详情" 
-      right={
-        <div className={styles.headerExtra}>
-          <span className={styles.momCode}>绑定MOM出厂码</span>
-          <div className={styles.expandIcon}>⛶</div>
-        </div>
-      }
+      title={`条码详情`} 
+      right={renderRightButton()}
     >
       <div className={styles.detail}>
         {/* 返回首页按钮 */}
@@ -240,6 +506,14 @@ const BarcodeDetail = () => {
             <Button 
               fill="outline" 
               color="primary"
+              onClick={handleEditDeliveryDate}
+              className={styles.actionBtn}
+            >
+              修改送货日期
+            </Button>
+            <Button 
+              fill="outline" 
+              color="primary"
               onClick={handleAddPaperVersion}
               className={styles.actionBtn}
             >
@@ -265,9 +539,89 @@ const BarcodeDetail = () => {
             >
               打印本体码
             </Button>
+            <Button 
+              block
+              fill="outline" 
+              color="primary"
+              onClick={handlePrintInner}
+              className={styles.printInnerBtn}
+              style={{ marginTop: '12px' }}
+            >
+              打印内包装码
+            </Button>
+            <Button 
+              block
+              fill="outline" 
+              color="primary"
+              onClick={handlePrintLabel}
+              className={styles.printLabelBtn}
+              style={{ marginTop: '12px' }}
+            >
+              收货外标签码
+            </Button>
           </div>
         </div>
       </div>
+
+      {/* 附件数量选择器 */}
+      <Picker
+        columns={[
+          Array.from({ length: 20 }, (_, i) => ({
+            label: `${i}`,
+            value: `${i}`
+          }))
+        ]}
+        visible={attachmentPickerVisible}
+        onClose={() => setAttachmentPickerVisible(false)}
+        onConfirm={handleAttachmentConfirm}
+        confirmText="确定"
+        cancelText="取消"
+      />
+
+      {/* 送货日期选择器 */}
+      <DatePicker
+        visible={deliveryDatePickerVisible}
+        onClose={() => setDeliveryDatePickerVisible(false)}
+        onConfirm={handleDeliveryDateConfirm}
+        confirmText="确定"
+        cancelText="取消"
+        title="修改送货日期"
+      />
+
+      {/* 图纸版本输入对话框 */}
+      <Dialog
+        visible={drawingVersionDialogVisible}
+        title="修改图纸版本"
+        content={
+          <div style={{ padding: '12px 0' }}>
+            <div style={{ marginBottom: '8px', color: '#666' }}>图纸版本</div>
+            <Input
+              placeholder="请输入图纸版本"
+              value={drawingVersionInput}
+              onChange={setDrawingVersionInput}
+              style={{ 
+                '--font-size': '16px',
+                '--text-align': 'left'
+              }}
+            />
+          </div>
+        }
+        closeOnAction
+        onClose={() => setDrawingVersionDialogVisible(false)}
+        actions={[
+          {
+            key: 'cancel',
+            text: '取消',
+            onClick: () => setDrawingVersionDialogVisible(false)
+          },
+          {
+            key: 'confirm',
+            text: '确定',
+            bold: true,
+            onClick: handleDrawingVersionConfirm
+          }
+        ]}
+      />
     </PageContainer>
   )
 }

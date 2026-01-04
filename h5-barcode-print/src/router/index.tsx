@@ -11,6 +11,7 @@ const Scan = lazy(() => import('@/pages/Scan'))
 const ScanResult = lazy(() => import('@/pages/ScanResult'))
 const BarcodeList = lazy(() => import('@/pages/BarcodeList'))
 const BarcodeDetail = lazy(() => import('@/pages/BarcodeDetail'))
+const BarcodeEdit = lazy(() => import('@/pages/BarcodeEdit'))
 const PrintBody = lazy(() => import('@/pages/PrintBody'))
 const PrintInner = lazy(() => import('@/pages/PrintInner'))
 const PrintLabel = lazy(() => import('@/pages/PrintLabel'))
@@ -53,6 +54,10 @@ export const router = createBrowserRouter([
       {
         path: 'barcode-detail',
         element: <LazyLoad><BarcodeDetail /></LazyLoad>,
+      },
+      {
+        path: 'barcode-edit',
+        element: <LazyLoad><BarcodeEdit /></LazyLoad>,
       },
       {
         path: 'print-body',

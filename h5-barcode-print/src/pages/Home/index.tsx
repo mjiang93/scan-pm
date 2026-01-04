@@ -36,13 +36,13 @@ const Home = () => {
     { 
       title: '扫SN打印内包装', 
       icon: <SetOutline />, 
-      path: '/print-inner',
+      path: '/scan?type=inner',
       color: '#1677ff'
     },
     { 
       title: '扫内包生成外装', 
       icon: <AppstoreOutline />, 
-      path: '/print-label',
+      path: '/scan?type=label',
       color: '#1677ff'
     },
   ]

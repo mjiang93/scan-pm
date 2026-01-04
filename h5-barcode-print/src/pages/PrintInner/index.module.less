@@ -1,28 +1,326 @@
-.print {
+.printInner {
   padding: 16px;
+  background-color: #f5f5f5;
 }
 
-.printerInfo {
-  background: #e6f4ff;
-  padding: 12px 16px;
+.printInfo {
+  background: white;
+  padding: 16px;
   border-radius: 8px;
   margin-bottom: 16px;
-  font-size: 14px;
-  color: #1677ff;
+  
+  .infoRow {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    .label {
+      font-weight: bold;
+      color: #333;
+      margin-right: 8px;
+      font-size: 16px;
+    }
+    
+    .value {
+      color: #666;
+      font-size: 16px;
+    }
+  }
 }
 
-.progress {
+.printContent {
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.preview {
+  border: 1px solid #ddd;
+  padding: 20px;
+  background: #fff;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-  padding: 12px;
-  background: #f5f5f5;
-  border-radius: 8px;
+  gap: 30px;
+  min-height: 350px;
+  position: relative;
+}
 
-  span {
-    font-size: 14px;
+.leftSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.partNoSection {
+  margin-bottom: 15px;
+  font-size: 10px;
+  font-weight: bold;
+  
+  .partNoLabel {
+    color: #333;
+  }
+  
+  .barcodeWrapper {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-start;
+  }
+}
+
+.infoSection {
+  .infoItem {
+    margin-bottom: 12px;
+    font-size: 10px;
+    display: inline-block;
+    max-width: 100%;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    .infoLabel {
+      font-weight: bold;
+      color: #333;
+      display: inline;
+    }
+    
+    .infoValue {
+      color: #333;
+      display: inline;
+      word-wrap: break-word;
+      word-break: break-all;
+      overflow-wrap: break-word;
+    }
+  }
+  
+  .infoItem.fullWidth {
+    display: block;
+    width: 100%;
+    
+    .infoValue {
+      display: inline;
+      word-wrap: break-word;
+      word-break: break-all;
+      overflow-wrap: break-word;
+    }
+  }
+}
+
+.qrCodeSection {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 10px;
+}
+
+.rightSection {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 150px;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.rightItem {
+  font-size: 10px;
+  margin-bottom: 10px;
+  
+  .rightLabel {
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .rightValue {
+    color: #333;
+  }
+}
+
+.smallBarcodeWrapper {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.printAction {
+  .printBtn {
+    background-color: #1890ff;
+    border-color: #1890ff;
+    height: 48px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+}
+
+.error {
+  text-align: center;
+  padding: 40px 20px;
+  
+  p {
     color: #666;
-    white-space: nowrap;
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  /* 隐藏所有不需要打印的元素 */
+  .adm-nav-bar,
+  .navbar,
+  .printInfo,
+  .printAction,
+  header,
+  nav,
+  [class*="adm-nav-bar"],
+  [class*="navbar"],
+  [class*="NavBar"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  /* 重置body样式 */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    font-family: Arial, sans-serif !important;
+  }
+  
+  /* 重置打印内容的样式 */
+  .printContent {
+    position: static !important;
+    width: 100% !important;
+    background: white !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    box-shadow: none !important;
+    border: none !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+  
+  .preview {
+    border: 1px solid #ddd !important;
+    padding: 20px !important;
+    background: #fff !important;
+    display: flex !important;
+    gap: 30px !important;
+    min-height: 350px !important;
+    position: relative !important;
+    border-radius: 0 !important;
+    align-items: center !important;
+  }
+  
+  .leftSection {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  .partNoSection {
+    margin-bottom: 15px !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    
+    .partNoLabel {
+      color: #000 !important;
+    }
+    
+    .barcodeWrapper {
+      margin-top: 8px !important;
+      display: flex !important;
+      justify-content: flex-start !important;
+    }
+  }
+  
+  .infoSection {
+    .infoItem {
+      margin-bottom: 12px !important;
+      font-size: 14px !important;
+      display: inline-block !important;
+      max-width: 100% !important;
+      
+      .infoLabel {
+        font-weight: bold !important;
+        color: #000 !important;
+        display: inline !important;
+      }
+      
+      .infoValue {
+        color: #000 !important;
+        display: inline !important;
+        word-wrap: break-word !important;
+        word-break: break-all !important;
+        overflow-wrap: break-word !important;
+      }
+    }
+    
+    .infoItem.fullWidth {
+      display: block !important;
+      width: 100% !important;
+      
+      .infoValue {
+        display: inline !important;
+        word-wrap: break-word !important;
+        word-break: break-all !important;
+        overflow-wrap: break-word !important;
+      }
+    }
+  }
+  
+  .qrCodeSection {
+    margin-top: auto !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    padding-top: 10px !important;
+  }
+  
+  .rightSection {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    min-width: 150px !important;
+    align-items: flex-end !important;
+    text-align: right !important;
+  }
+  
+  .rightItem {
+    font-size: 14px !important;
+    margin-bottom: 10px !important;
+    
+    .rightLabel {
+      font-weight: bold !important;
+      color: #000 !important;
+    }
+    
+    .rightValue {
+      color: #000 !important;
+    }
+  }
+  
+  .smallBarcodeWrapper {
+    margin-top: auto !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+  }
+  
+  /* 确保Canvas和SVG在打印时正确显示 */
+  canvas,
+  svg {
+    display: block !important;
+    max-width: none !important;
+    width: auto !important;
+    height: auto !important;
+    visibility: visible !important;
+  }
+  
+  /* 打印页面设置 */
+  @page {
+    margin: 5mm !important;
+    size: A4 !important;
   }
 }

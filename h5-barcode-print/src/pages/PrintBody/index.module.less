@@ -68,8 +68,8 @@
 
 .qrSection {
   display: flex;
-  align-items: flex-start;
-  gap: 20px;
+  align-items: center; // 改为居中对齐
+  gap: 12px; // 增加间距从20px到30px
   margin-bottom: 20px;
   padding: 16px;
   border: 1px solid #ddd;
@@ -84,12 +84,14 @@
   
   .qrInfo {
     flex: 1;
+    min-width: 0; // 允许flex子元素收缩
     
     .qrInfoRow {
       display: flex;
-      align-items: center;
-      margin-bottom: 6px;
+      align-items: flex-start; // 改为顶部对齐，支持多行
+      margin-bottom: 8px; // 增加行间距从6px到8px
       font-size: 14px;
+      flex-wrap: wrap; // 允许换行
       
       &:last-child {
         margin-bottom: 0;
@@ -97,13 +99,18 @@
       
       .qrLabel {
         font-weight: bold;
-        margin-right: 6px;
+        margin-right: 8px; // 增加标签和值之间的间距从6px到8px
         color: #333;
+        flex-shrink: 0; // 标签不收缩
       }
       
       .qrValue {
-        margin-right: 16px;
         color: #666;
+        word-break: break-all; // 允许在任意字符处换行
+        overflow-wrap: break-word; // 长单词换行
+        max-width: 100%; // 限制最大宽度
+        flex: 1; // 占据剩余空间
+        min-width: 0; // 允许收缩
       }
     }
   }
@@ -235,30 +242,41 @@
     background: white !important;
     border-radius: 0 !important;
     display: flex !important;
-    align-items: flex-start !important;
+    align-items: center !important; // 打印时也居中对齐
+    gap: 5mm !important; // 打印时增加间距
     
     .qrCode {
-      margin-right: 3mm !important;
+      margin-right: 0 !important;
       display: block !important;
+      flex-shrink: 0 !important;
     }
     
     .qrInfo {
       display: block !important;
+      flex: 1 !important;
+      min-width: 0 !important;
       
       .qrInfoRow {
         display: flex !important;
-        margin-bottom: 1mm !important;
+        flex-wrap: wrap !important;
+        align-items: flex-start !important;
+        margin-bottom: 1.5mm !important; // 增加行间距
         font-size: 9pt !important;
         
         .qrLabel {
           font-weight: bold !important;
           color: #000 !important;
           display: inline !important;
+          flex-shrink: 0 !important;
+          margin-right: 2mm !important; // 增加标签和值之间的间距
         }
         
         .qrValue {
           color: #333 !important;
           display: inline !important;
+          word-break: break-all !important;
+          overflow-wrap: break-word !important;
+          max-width: 100% !important;
         }
       }
     }

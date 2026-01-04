@@ -2,7 +2,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button, Toast } from 'antd-mobile'
-import { PageContainer, QRCode, Barcode } from '@/components'
+import { PageContainer, QRCode, Barcode, Loading } from '@/components'
+import { getBarcodeDetail, updatePrintStatus } from '@/services/barcode'
+import { useUserStore } from '@/stores'
 import styles from './index.module.less'
 
 interface PrintData {
@@ -14,34 +16,64 @@ interface PrintData {
   sn: string
   barcode1: string
   barcode2: string
+  qrCodeData: string
 }
 
 const PrintBody = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const code = searchParams.get('code') || ''
+  const id = searchParams.get('id') || ''
   const [printData, setPrintData] = useState<PrintData | null>(null)
+  const [loading, setLoading] = useState(true)
   const printRef = useRef<HTMLDivElement>(null)
+  const { userInfo } = useUserStore()
+
+  const loadPrintData = async () => {
+    setLoading(true)
+    try {
+      // 调用详情接口获取条码信息
+      const detail = await getBarcodeDetail(id)
+      
+      if (detail) {
+        // 根据详情接口返回的数据映射到打印数据
+        // 根据图片显示的格式构建条形码数据
+        // 格式：S{SN码}IP{物料编码}2P{技术版本}-001
+        const barcode1 = `S${detail.codeSn || ''}IP${detail.materialCode || ''}2P${detail.technicalVersion || ''}-001`
+        const barcode2 = `S${detail.codeSn || ''}IP${detail.materialCode || ''}2P${detail.technicalVersion || ''}-002`
+        
+        const mappedData: PrintData = {
+          no: 'G1-1', // 固定值或从配置获取
+          size: '42mm*10mm', // 固定值或从配置获取
+          pn: detail.materialCode || '', // PN使用物料编码
+          rev: detail.technicalVersion || '', // Rev使用技术版本
+          model: detail.nameModel || '', // Model使用名称型号
+          sn: detail.codeSn || '', // SN使用SN码
+          barcode1: barcode1,
+          barcode2: barcode2,
+          qrCodeData: `PN:${detail.materialCode || ''};Rev:${detail.technicalVersion || ''};Model:${detail.nameModel || ''};SN:${detail.codeSn || ''}`
+        }
+        setPrintData(mappedData)
+      }
+    } catch (error) {
+      console.error('加载打印数据失败:', error)
+      Toast.show({
+        icon: 'fail',
+        content: '加载打印数据失败'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    // 如果有传入的code，生成打印数据
-    if (code) {
-      const mockPrintData: PrintData = {
-        no: 'G1-1',
-        size: '42mm*10mm',
-        pn: '9302A01RG5',
-        rev: 'A01',
-        model: '0000124A001',
-        sn: '0000124A001',
-        barcode1: 'S0000124A001IP9302A01RG52PA01-001',
-        barcode2: 'S0000124A001IP9302A01RG52PA01-002'
-      }
-      // 使用setTimeout避免同步setState警告
-      setTimeout(() => {
-        setPrintData(mockPrintData)
-      }, 0)
+    // 如果有传入的id，从API获取打印数据
+    if (id) {
+      loadPrintData()
+    } else {
+      setLoading(false)
     }
-  }, [code])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
   const handlePrint = async () => {
     if (!printData) {
@@ -56,12 +88,25 @@ const PrintBody = () => {
       // 调用浏览器打印功能
       window.print()
       
+      // 更新打印状态
+      if (id) {
+        await updatePrintStatus({
+          id: parseInt(id),
+          operator: userInfo?.userName || 'unknown',
+          btPrintCnt: 1
+        })
+      }
+      
       Toast.show({ icon: 'success', content: '打印任务已发送' })
       
     } catch (error) {
       console.error('打印失败:', error)
       Toast.show({ icon: 'fail', content: '打印失败，请重试' })
     }
+  }
+
+  if (loading) {
+    return <Loading loading fullscreen />
   }
 
   if (!printData) {
@@ -100,7 +145,7 @@ const PrintBody = () => {
             <div className={styles.qrSection}>
               <div className={styles.qrCode}>
                 <QRCode 
-                  value={`PN:${printData.pn};Rev:${printData.rev};Model:${printData.model};SN:${printData.sn}`}
+                  value={printData.qrCodeData}
                   size={100}
                 />
               </div>

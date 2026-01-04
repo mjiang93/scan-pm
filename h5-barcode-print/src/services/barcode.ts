@@ -43,6 +43,86 @@ export function getPrintHistory(params?: {
 /**
  * 获取条码详情
  */
-export function getBarcodeDetail(code: string): Promise<any> {
-  return request.get(`/barcode/detail/${code}`)
+export function getBarcodeDetail(id: string): Promise<any> {
+  return request.get(`/pc/detail`, { params: { id } })
+}
+
+/**
+ * 分页查询条码列表
+ */
+export function getBarcodeListPage(params: {
+  deliveryDateStart?: string
+  deliveryDateEnd?: string
+  page: number
+  size: number
+}): Promise<{
+  result: any[]
+  total: number
+  empty: boolean
+}> {
+  return request.post('/pc/page', params)
+}
+
+/**
+ * 更新条码信息
+ */
+export function updateBarcode(data: any): Promise<any> {
+  return request.post('/pc/edit', data)
+}
+
+/**
+ * 编辑附件数量
+ */
+export function editAccessory(params: {
+  accessoryCnt: number
+  ids: number[]
+  operator: string
+}): Promise<any> {
+  return request.post('/pc/editaccessory', params)
+}
+
+/**
+ * 修改送货日期
+ */
+export function editDelivery(params: {
+  deliveryDate: string
+  ids: number[]
+  operator: string
+}): Promise<any> {
+  return request.post('/pc/editdelivery', params)
+}
+
+/**
+ * 修改图纸版本
+ */
+export function editDrawingVersion(params: {
+  id: string
+  drawingVersion: string
+  operator: string
+}): Promise<any> {
+  return request.get('/pda/editdv', { params })
+}
+
+/**
+ * 更新打印状态
+ */
+export function updatePrintStatus(params: {
+  id: number
+  operator: string
+  btPrintCnt?: number
+  nbzPrintCnt?: number
+  wbzPrintCnt?: number
+}): Promise<any> {
+  return request.post('/pc/editprint', params)
+}
+
+/**
+ * 扫描MOM系统出厂编码，绑定生成的条码信息
+ */
+export function bindFactoryCode(params: {
+  id: string
+  factoryCode: string
+  operator: string
+}): Promise<any> {
+  return request.get('/pda/scanfcode', { params })
 }
