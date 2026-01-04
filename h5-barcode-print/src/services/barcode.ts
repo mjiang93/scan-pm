@@ -126,3 +126,69 @@ export function bindFactoryCode(params: {
 }): Promise<any> {
   return request.get('/pda/scanfcode', { params })
 }
+
+/**
+ * 扫本体码得到内包装码打印信息
+ */
+export function scanBtcode(btcode: string): Promise<{
+  id: string
+  partNo: string
+  supplierCode: string
+  codeSN: string
+  dcDate: string
+  qty: string
+  remark: string
+}> {
+  return request.get('/pda/scanbtcode', { params: { btcode } })
+}
+
+/**
+ * 扫描项目编码，生成条码信息
+ */
+export function scanProjectCode(params: {
+  projectCode: string
+  operator: string
+}): Promise<{
+  id: string
+  projectCode: string
+  materialCode: string
+  nameModel: string
+  drawingVersion: string
+  technicalVersion: string
+  supplierCode: string
+  unit: string
+  cnt: number
+  lineName: string
+  productionDateStart: string
+  productionDateEnd: string
+  deliveryDate: string
+  code09: string
+  codeSn: string
+  factoryCode: string
+  accessoryCnt: number
+  printStatus: number
+  btPrintCnt: number
+  nbzPrintCnt: number
+  wbzPrintCnt: number
+}> {
+  return request.get('/pda/scanpcode', { params })
+}
+
+/**
+ * 扫内包装码得到外包装码打印信息
+ */
+export function scanNbzcode(nbzcode: string): Promise<{
+  id: string
+  materialCode: string
+  nameModel: string
+  supplierCode: string
+  unit: string
+  cnt: number
+  codeSN: string
+  deliveryDate: string
+  deliveryNo: string
+  poNo: string
+  saveClean: string
+}> {
+  return request.get('/pda/scannbzcode', { params: { nbzcode } })
+}

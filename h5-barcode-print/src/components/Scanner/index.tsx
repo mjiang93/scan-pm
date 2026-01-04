@@ -1,5 +1,5 @@
 // 扫码组件
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import styles from './index.module.less'
 
@@ -11,21 +11,15 @@ export interface ScannerProps {
 const Scanner = ({ onScan, onError }: ScannerProps) => {
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const isScanningRef = useRef(false)
-
-  const stopScanner = useCallback(async () => {
-    if (scannerRef.current && isScanningRef.current) {
-      try {
-        await scannerRef.current.stop()
-        isScanningRef.current = false
-      } catch {
-        // 忽略停止错误
-      }
-    }
-  }, [])
+  const isInitializedRef = useRef(false)
 
   useEffect(() => {
+    // 防止重复初始化
+    if (isInitializedRef.current) return
+
     const startScanner = async () => {
       try {
+        isInitializedRef.current = true
         const scanner = new Html5Qrcode('scanner-container')
         scannerRef.current = scanner
 
@@ -37,7 +31,6 @@ const Scanner = ({ onScan, onError }: ScannerProps) => {
           },
           (decodedText) => {
             onScan(decodedText)
-            stopScanner()
           },
           () => {
             // 扫描中，忽略错误
@@ -45,6 +38,7 @@ const Scanner = ({ onScan, onError }: ScannerProps) => {
         )
         isScanningRef.current = true
       } catch (error) {
+        isInitializedRef.current = false
         const message = error instanceof Error ? error.message : '摄像头启动失败'
         onError?.(message)
       }
@@ -53,9 +47,21 @@ const Scanner = ({ onScan, onError }: ScannerProps) => {
     startScanner()
 
     return () => {
-      stopScanner()
+      const cleanup = async () => {
+        if (scannerRef.current && isScanningRef.current) {
+          try {
+            await scannerRef.current.stop()
+            scannerRef.current.clear()
+            isScanningRef.current = false
+            isInitializedRef.current = false
+          } catch {
+            // 忽略清理错误
+          }
+        }
+      }
+      cleanup()
     }
-  }, [onScan, onError, stopScanner])
+  }, [onScan, onError])
 
   return (
     <div className={styles.scanner}>
@@ -63,8 +69,9 @@ const Scanner = ({ onScan, onError }: ScannerProps) => {
       <div className={styles.overlay}>
         <div className={styles.scanBox}>
           <div className={styles.corner} />
+          <div className={styles.scanLine} />
         </div>
-        <p className={styles.tip}>将条码放入框内，即可自动扫描</p>
+        <p className={styles.tip}>请扫描二维码或条形码</p>
       </div>
     </div>
   )

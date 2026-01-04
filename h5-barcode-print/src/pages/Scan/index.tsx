@@ -1,5 +1,5 @@
 // 扫码页面
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Input, Button, Toast } from 'antd-mobile'
 import { PageContainer } from '@/components'
@@ -12,27 +12,38 @@ const Scan = () => {
   const [searchParams] = useSearchParams()
   const type = searchParams.get('type') || 'body' // 默认为本体码
   const id = searchParams.get('id') || '' // 条码ID，用于MOM出厂码绑定
-  const [showManual, setShowManual] = useState(false)
   const [manualCode, setManualCode] = useState('')
   const [permissionDenied, setPermissionDenied] = useState(false)
 
-  const handleScan = (code: string) => {
-    Toast.show({ content: `扫描成功: ${code}` })
+  const handleScan = useCallback((code: string) => {
+    Toast.show({ 
+      content: '扫描成功',
+      duration: 1500
+    })
     
     // 如果是MOM出厂码绑定，直接返回详情页面
     if (type === 'mom' && id) {
       navigate(`/barcode-detail?id=${encodeURIComponent(id)}&factoryCode=${encodeURIComponent(code)}`)
+    } else if (type === 'inner') {
+      // 扫SN打印内包装，直接跳转到详情页面
+      navigate(`/barcode-detail?btcode=${encodeURIComponent(code)}&type=inner`)
+    } else if (type === 'body') {
+      // 扫码生成SN码，直接跳转到详情页面
+      navigate(`/barcode-detail?projectCode=${encodeURIComponent(code)}&type=body`)
+    } else if (type === 'label') {
+      // 扫内包生成外装，直接跳转到详情页面
+      navigate(`/barcode-detail?nbzcode=${encodeURIComponent(code)}&type=label`)
     } else {
       navigate(`/scan-result?code=${encodeURIComponent(code)}&type=${type}`)
     }
-  }
+  }, [type, id, navigate])
 
-  const handleError = (error: string) => {
+  const handleError = useCallback((error: string) => {
     if (error.includes('Permission') || error.includes('NotAllowed')) {
       setPermissionDenied(true)
     }
     Toast.show({ content: error })
-  }
+  }, [])
 
   const handleManualSubmit = () => {
     if (isEmpty(manualCode)) {
@@ -43,6 +54,15 @@ const Scan = () => {
     // 如果是MOM出厂码绑定，直接返回详情页面
     if (type === 'mom' && id) {
       navigate(`/barcode-detail?id=${encodeURIComponent(id)}&factoryCode=${encodeURIComponent(manualCode)}`)
+    } else if (type === 'inner') {
+      // 扫SN打印内包装，直接跳转到详情页面
+      navigate(`/barcode-detail?btcode=${encodeURIComponent(manualCode)}&type=inner`)
+    } else if (type === 'body') {
+      // 扫码生成SN码，直接跳转到详情页面
+      navigate(`/barcode-detail?projectCode=${encodeURIComponent(manualCode)}&type=body`)
+    } else if (type === 'label') {
+      // 扫内包生成外装，直接跳转到详情页面
+      navigate(`/barcode-detail?nbzcode=${encodeURIComponent(manualCode)}&type=label`)
     } else {
       navigate(`/scan-result?code=${encodeURIComponent(manualCode)}&type=${type}`)
     }
@@ -61,14 +81,12 @@ const Scan = () => {
   return (
     <PageContainer title={getTitle()}>
       <div className={styles.scan}>
-        {permissionDenied || showManual ? (
+        {permissionDenied ? (
           <div className={styles.manual}>
-            {permissionDenied && (
-              <div className={styles.permissionTip}>
-                <p>📷 摄像头权限被拒绝</p>
-                <p>请在浏览器设置中允许访问摄像头，或手动输入条码</p>
-              </div>
-            )}
+            <div className={styles.permissionTip}>
+              <p>📷 摄像头权限被拒绝</p>
+              <p>请在浏览器设置中允许访问摄像头，或手动输入条码</p>
+            </div>
             <div className={styles.inputArea}>
               <Input
                 placeholder="请输入条码"
@@ -76,26 +94,37 @@ const Scan = () => {
                 onChange={setManualCode}
                 clearable
               />
-              <Button color="primary" onClick={handleManualSubmit}>
+              <Button 
+                color="primary" 
+                onClick={handleManualSubmit}
+                disabled={isEmpty(manualCode)}
+              >
                 搜索
               </Button>
             </div>
-            {!permissionDenied && (
-              <Button fill="none" onClick={() => setShowManual(false)}>
-                返回扫码
-              </Button>
-            )}
           </div>
         ) : (
           <>
             <div className={styles.scannerWrapper}>
               <Scanner onScan={handleScan} onError={handleError} />
             </div>
-            {/* <div className={styles.actions}>
-              <Button fill="outline" onClick={() => setShowManual(true)}>
-                手动输入
-              </Button>
-            </div> */}
+            <div className={styles.actions}>
+              <div className={styles.inputArea}>
+                <Input
+                  placeholder="或手动输入条码"
+                  value={manualCode}
+                  onChange={setManualCode}
+                  clearable
+                />
+                <Button 
+                  color="primary" 
+                  onClick={handleManualSubmit}
+                  disabled={isEmpty(manualCode)}
+                >
+                  搜索
+                </Button>
+              </div>
+            </div>
           </>
         )}
       </div>

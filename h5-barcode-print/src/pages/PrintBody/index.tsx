@@ -101,7 +101,7 @@ const PrintBody = () => {
       
     } catch (error) {
       console.error('打印失败:', error)
-      Toast.show({ icon: 'fail', content: '打印失败，请重试' })
+      // Toast.show({ icon: 'fail', content: '打印失败，请重试' })
     }
   }
 

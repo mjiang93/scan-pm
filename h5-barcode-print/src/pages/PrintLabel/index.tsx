@@ -109,7 +109,7 @@ const PrintLabel = () => {
       
     } catch (error) {
       console.error('打印失败:', error)
-      Toast.show({ icon: 'fail', content: '打印失败，请重试' })
+      // Toast.show({ icon: 'fail', content: '打印失败，请重试' })
     }
   }
 
@@ -151,13 +151,6 @@ const PrintLabel = () => {
             {/* 标题 */}
             <div className={styles.titleSection}>
               <h2>{printData.title}</h2>
-              <div className={styles.qrCodeWrapper}>
-                <QRCode 
-                  value={printData.qrCodeData}
-                  size={60}
-                />
-                <div className={styles.qrLabel}>二维码</div>
-              </div>
             </div>
 
             {/* 表格内容 */}
@@ -165,11 +158,21 @@ const PrintLabel = () => {
               <tbody>
                 <tr>
                   <td className={styles.labelCell}>物料编码</td>
-                  <td className={styles.valueCell} colSpan={3}>{printData.materialCode}</td>
+                  <td className={styles.valueCell} colSpan={2}>{printData.materialCode}</td>
+                  <td className={styles.qrSection} rowSpan={2}>
+                    <div className={styles.qrCodeContainer}>
+                      <div className={styles.qrCode}>
+                        <QRCode 
+                          value={printData.qrCodeData}
+                          size={90}
+                        />
+                      </div>
+                    </div>
+                  </td>
                 </tr>
                 <tr>
                   <td className={styles.labelCell}>名称型号</td>
-                  <td className={styles.valueCell} colSpan={3}>{printData.nameModel}</td>
+                  <td className={`${styles.valueCell} ${styles.multiLine}`} colSpan={2}>{printData.nameModel}</td>
                 </tr>
                 <tr>
                   <td className={styles.labelCell}>数量</td>
@@ -185,7 +188,9 @@ const PrintLabel = () => {
                 </tr>
                 <tr>
                   <td className={styles.labelCell}>PO/行号</td>
-                  <td className={styles.valueCell} colSpan={3}>{printData.poNumber}</td>
+                  <td className={styles.valueCell}>{printData.poNumber}</td>
+                  <td className={styles.labelCell}>送货单号</td>
+                  <td className={styles.valueCell}></td>
                 </tr>
                 <tr>
                   <td className={styles.labelCell}>批号</td>
@@ -202,17 +207,10 @@ const PrintLabel = () => {
                 </tr>
                 <tr>
                   <td className={styles.labelCell}>存储/清洁</td>
-                  <td className={styles.valueCell}>{printData.storageLocation}</td>
-                  <td className={styles.labelCell} colSpan={2}></td>
+                  <td className={styles.valueCell} colSpan={3}>{printData.storageLocation}</td>
                 </tr>
               </tbody>
             </table>
-
-            {/* 底部SN */}
-            <div className={styles.snSection}>
-              <span className={styles.snLabel}>SN:</span>
-              <span className={styles.snValue}>{printData.sn}</span>
-            </div>
           </div>
         </div>
 

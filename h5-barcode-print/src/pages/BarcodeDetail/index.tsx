@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button, Card, Toast, Picker, DatePicker, Dialog, Input } from 'antd-mobile'
 import type { PickerValue } from 'antd-mobile/es/components/picker'
-import { PageContainer, Loading } from '@/components'
-import { getBarcodeDetail, editAccessory, editDelivery, editDrawingVersion, bindFactoryCode } from '@/services/barcode'
+import { PageContainer, Loading, Empty } from '@/components'
+import { getBarcodeDetail, editAccessory, editDelivery, editDrawingVersion, bindFactoryCode, scanBtcode, scanProjectCode, scanNbzcode } from '@/services/barcode'
 import { useUserStore } from '@/stores'
 import styles from './index.module.less'
 
@@ -28,13 +28,44 @@ interface BarcodeDetail {
   deliveryDate: string
 }
 
+interface InnerPackageInfo {
+  id: string
+  partNo: string
+  supplierCode: string
+  codeSN: string
+  dcDate: string
+  qty: string
+  remark: string
+}
+
+interface OuterPackageInfo {
+  id: string
+  materialCode: string
+  nameModel: string
+  supplierCode: string
+  unit: string
+  cnt: number
+  codeSN: string
+  deliveryDate: string
+  deliveryNo: string
+  poNo: string
+  saveClean: string
+}
+
 const BarcodeDetail = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const id = searchParams.get('id') || ''
+  const btcode = searchParams.get('btcode') || ''
+  const projectCode = searchParams.get('projectCode') || ''
+  const nbzcode = searchParams.get('nbzcode') || ''
+  const type = searchParams.get('type') || ''
   const factoryCodeFromScan = searchParams.get('factoryCode') || ''
   const [loading, setLoading] = useState(true)
   const [detail, setDetail] = useState<BarcodeDetail | null>(null)
+  const [innerPackageInfo, setInnerPackageInfo] = useState<InnerPackageInfo | null>(null)
+  const [outerPackageInfo, setOuterPackageInfo] = useState<OuterPackageInfo | null>(null)
+  const [error, setError] = useState<string>('')
   const [attachmentPickerVisible, setAttachmentPickerVisible] = useState(false)
   const [deliveryDatePickerVisible, setDeliveryDatePickerVisible] = useState(false)
   const [drawingVersionDialogVisible, setDrawingVersionDialogVisible] = useState(false)
@@ -42,10 +73,116 @@ const BarcodeDetail = () => {
   const { userInfo } = useUserStore()
 
   useEffect(() => {
+    // 如果是扫内包生成外装（type=label），调用scannbzcode接口
+    if (type === 'label' && nbzcode) {
+      const loadOuterPackageInfo = async () => {
+        setLoading(true)
+        setError('')
+        try {
+          const data = await scanNbzcode(nbzcode)
+          setOuterPackageInfo(data)
+        } catch (error: unknown) {
+          console.error('加载外包装码信息失败:', error)
+          const err = error as { response?: { data?: { msg?: string } }; message?: string }
+          const errorMsg = err?.response?.data?.msg || err?.message || '该二维码或条码非法，无法识别'
+          setError(errorMsg)
+          Toast.show({
+            icon: 'fail',
+            content: errorMsg
+          })
+        } finally {
+          setLoading(false)
+        }
+      }
+      loadOuterPackageInfo()
+      return
+    }
+
+    // 如果是扫码生成SN码（type=body），调用scanpcode接口
+    if (type === 'body' && projectCode && userInfo) {
+      const loadProjectCodeInfo = async () => {
+        setLoading(true)
+        setError('')
+        try {
+          const data = await scanProjectCode({
+            projectCode,
+            operator: userInfo.userName || 'unknown'
+          })
+          
+          // 映射API返回的数据到组件需要的格式
+          const mappedDetail: BarcodeDetail = {
+            projectCode: data.projectCode || '',
+            productCode: data.materialCode || '',
+            productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
+            productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
+            productionLine: data.lineName || '',
+            techVersion: data.technicalVersion || '',
+            nameType: data.nameModel || '',
+            quantity: data.cnt || 0,
+            unit: data.unit || '',
+            supplierCode: data.supplierCode || '',
+            factoryCode: data.factoryCode || '',
+            snCode: data.codeSn || '',
+            code09: data.code09 || '',
+            materialCode: data.materialCode || '',
+            drawingVersion: data.drawingVersion || '',
+            attachments: data.accessoryCnt || 0,
+            deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : ''
+          }
+          setDetail(mappedDetail)
+          
+          Toast.show({
+            icon: 'success',
+            content: 'SN码生成成功'
+          })
+        } catch (error: unknown) {
+          console.error('生成SN码失败:', error)
+          const err = error as { response?: { data?: { msg?: string } }; message?: string }
+          const errorMsg = err?.response?.data?.msg || err?.message || '生成SN码失败'
+          setError(errorMsg)
+          Toast.show({
+            icon: 'fail',
+            content: errorMsg
+          })
+        } finally {
+          setLoading(false)
+        }
+      }
+      loadProjectCodeInfo()
+      return
+    }
+
+    // 如果是扫SN打印内包装（type=inner），调用scanbtcode接口
+    if (type === 'inner' && btcode) {
+      const loadInnerPackageInfo = async () => {
+        setLoading(true)
+        setError('')
+        try {
+          const data = await scanBtcode(btcode)
+          setInnerPackageInfo(data)
+        } catch (error: unknown) {
+          console.error('加载内包装码信息失败:', error)
+          const err = error as { response?: { data?: { msg?: string } }; message?: string }
+          const errorMsg = err?.response?.data?.msg || err?.message || '该二维码或条码非法，无法识别'
+          setError(errorMsg)
+          Toast.show({
+            icon: 'fail',
+            content: errorMsg
+          })
+        } finally {
+          setLoading(false)
+        }
+      }
+      loadInnerPackageInfo()
+      return
+    }
+
+    // 原有的根据id加载详情逻辑
     if (!id) return
 
     const loadDetail = async () => {
       setLoading(true)
+      setError('')
       try {
         const data = await getBarcodeDetail(id)
         // 映射API返回的数据到组件需要的格式
@@ -69,11 +206,14 @@ const BarcodeDetail = () => {
           deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : ''
         }
         setDetail(mappedDetail)
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('加载条码详情失败:', error)
+        const err = error as { response?: { data?: { msg?: string } }; message?: string }
+        const errorMsg = err?.response?.data?.msg || err?.message || '加载详情失败'
+        setError(errorMsg)
         Toast.show({
           icon: 'fail',
-          content: '加载详情失败'
+          content: errorMsg
         })
       } finally {
         setLoading(false)
@@ -81,7 +221,7 @@ const BarcodeDetail = () => {
     }
 
     loadDetail()
-  }, [id])
+  }, [id, type, btcode, projectCode, nbzcode, userInfo])
 
   // 处理从扫码页面返回的出厂码绑定
   useEffect(() => {
@@ -157,6 +297,15 @@ const BarcodeDetail = () => {
 
   const handleBack = () => {
     navigate('/home')
+  }
+
+  const handleNavBack = () => {
+    // 导航栏返回按钮：返回上一页，如果没有历史记录则返回首页
+    if (window.history.length > 1) {
+      navigate(-1)
+    } else {
+      navigate('/home')
+    }
   }
 
   const handleAddAttachment = () => {
@@ -372,14 +521,211 @@ const BarcodeDetail = () => {
     return <Loading loading fullscreen />
   }
 
+  // 如果有错误，显示错误页面
+  if (error) {
+    const pageTitle = type === 'inner' ? '内包装码打印信息' : type === 'body' ? '生成SN码' : type === 'label' ? '外包装码打印信息' : '条码详情'
+    return (
+      <PageContainer title={pageTitle} onBack={handleNavBack}>
+        <div className={styles.detail}>
+          <Empty description={error}>
+            <Button 
+              color="primary" 
+              onClick={handleBack}
+            >
+              返回首页
+            </Button>
+          </Empty>
+        </div>
+      </PageContainer>
+    )
+  }
+
+  // 如果是外包装码信息展示
+  if (type === 'label' && outerPackageInfo) {
+    return (
+      <PageContainer title="外包装码打印信息" onBack={handleNavBack}>
+        <div className={styles.detail}>
+          {/* 返回首页按钮 */}
+          <div className={styles.backSection}>
+            <Button 
+              block 
+              fill="outline" 
+              color="warning"
+              onClick={handleBack}
+              className={styles.backBtn}
+            >
+              返回首页
+            </Button>
+          </div>
+
+          {/* 外包装码信息卡片 */}
+          <Card className={styles.mainCard}>
+            <div className={styles.mainHeader}>
+              <div className={styles.projectInfo}>
+                <span className={styles.projectLabel}>外包装码打印信息</span>
+              </div>
+            </div>
+
+            <div className={styles.infoGrid}>
+              <div className={styles.infoRow}>
+                <span className={styles.label}>物料编码：</span>
+                <span className={styles.value}>{outerPackageInfo.materialCode}</span>
+              </div>
+              
+              <div className={styles.infoRow}>
+                <span className={styles.label}>名称型号：</span>
+                <span className={styles.value}>{outerPackageInfo.nameModel}</span>
+              </div>
+
+              <div className={styles.infoRow}>
+                <span className={styles.label}>供货商代码：</span>
+                <span className={styles.value}>{outerPackageInfo.supplierCode}</span>
+              </div>
+
+              <div className={styles.infoRow}>
+                <span className={styles.label}>单位：</span>
+                <span className={styles.value}>{outerPackageInfo.unit}</span>
+                <span className={styles.label}>数量：</span>
+                <span className={styles.value}>{outerPackageInfo.cnt}</span>
+              </div>
+
+              <div className={styles.infoRow}>
+                <span className={styles.label}>SN码：</span>
+                <span className={styles.value}>{outerPackageInfo.codeSN}</span>
+              </div>
+
+              <div className={styles.infoRow}>
+                <span className={styles.label}>送货日期：</span>
+                <span className={styles.value}>{outerPackageInfo.deliveryDate}</span>
+              </div>
+
+              <div className={styles.infoRow}>
+                <span className={styles.label}>送货单号：</span>
+                <span className={styles.value}>{outerPackageInfo.deliveryNo}</span>
+              </div>
+
+              <div className={styles.infoRow}>
+                <span className={styles.label}>PO行号：</span>
+                <span className={styles.value}>{outerPackageInfo.poNo}</span>
+              </div>
+
+              <div className={styles.infoRow}>
+                <span className={styles.label}>存储清洁：</span>
+                <span className={styles.value}>{outerPackageInfo.saveClean}</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* 打印按钮 */}
+          <div className={styles.actionSection}>
+            <div className={styles.printSection}>
+              <Button 
+                block
+                color="primary"
+                onClick={() => {
+                  // 跳转到打印外标签页面
+                  navigate(`/print-label?id=${encodeURIComponent(outerPackageInfo.id)}&from=scan`)
+                }}
+                className={styles.printLabelBtn}
+              >
+                打印收货外标签码
+              </Button>
+            </div>
+          </div>
+        </div>
+      </PageContainer>
+    )
+  }
+
+  // 如果是内包装码信息展示
+  if (type === 'inner' && innerPackageInfo) {
+    return (
+      <PageContainer title="内包装码打印信息" onBack={handleNavBack}>
+        <div className={styles.detail}>
+          {/* 返回首页按钮 */}
+          <div className={styles.backSection}>
+            <Button 
+              block 
+              fill="outline" 
+              color="warning"
+              onClick={handleBack}
+              className={styles.backBtn}
+            >
+              返回首页
+            </Button>
+          </div>
+
+          {/* 内包装码信息卡片 */}
+          <Card className={styles.mainCard}>
+            <div className={styles.mainHeader}>
+              <div className={styles.projectInfo}>
+                <span className={styles.projectLabel}>内包装码打印信息</span>
+              </div>
+            </div>
+
+            <div className={styles.infoGrid}>
+              <div className={styles.infoRow}>
+                <span className={styles.label}>客户物料编号：</span>
+                <span className={styles.value}>{innerPackageInfo.partNo}</span>
+              </div>
+              
+              <div className={styles.infoRow}>
+                <span className={styles.label}>供货商代码：</span>
+                <span className={styles.value}>{innerPackageInfo.supplierCode}</span>
+              </div>
+
+              <div className={styles.infoRow}>
+                <span className={styles.label}>SN码：</span>
+                <span className={styles.value}>{innerPackageInfo.codeSN}</span>
+              </div>
+
+              <div className={styles.infoRow}>
+                <span className={styles.label}>生产日期：</span>
+                <span className={styles.value}>{innerPackageInfo.dcDate}</span>
+              </div>
+
+              <div className={styles.infoRow}>
+                <span className={styles.label}>数量：</span>
+                <span className={styles.value}>{innerPackageInfo.qty}</span>
+              </div>
+
+              <div className={styles.infoRow}>
+                <span className={styles.label}>描述：</span>
+                <span className={styles.value}>{innerPackageInfo.remark}</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* 打印按钮 */}
+          <div className={styles.actionSection}>
+            <div className={styles.printSection}>
+              <Button 
+                block
+                color="primary"
+                onClick={() => {
+                  // 跳转到打印内包装页面
+                  navigate(`/print-inner?id=${encodeURIComponent(innerPackageInfo.id)}&from=scan`)
+                }}
+                className={styles.printInnerBtn}
+              >
+                打印内包装码
+              </Button>
+            </div>
+          </div>
+        </div>
+      </PageContainer>
+    )
+  }
+
   if (!detail) {
     return (
-      <PageContainer title="条码详情">
-        <div className={styles.error}>
-          <p>未找到条码信息</p>
-          <Button color="primary" onClick={handleBack}>
-            返回首页
-          </Button>
+      <PageContainer title="条码详情" onBack={handleNavBack}>
+        <div className={styles.detail}>
+          <Empty description="未找到条码信息">
+            <Button color="primary" onClick={handleBack}>
+              返回首页
+            </Button>
+          </Empty>
         </div>
       </PageContainer>
     )
@@ -389,6 +735,7 @@ const BarcodeDetail = () => {
     <PageContainer 
       title={`条码详情`} 
       right={renderRightButton()}
+      onBack={handleNavBack}
     >
       <div className={styles.detail}>
         {/* 返回首页按钮 */}
@@ -503,14 +850,14 @@ const BarcodeDetail = () => {
             >
               添加附件
             </Button>
-            <Button 
+            {/* <Button 
               fill="outline" 
               color="primary"
               onClick={handleEditDeliveryDate}
               className={styles.actionBtn}
             >
               修改送货日期
-            </Button>
+            </Button> */}
             <Button 
               fill="outline" 
               color="primary"
@@ -530,35 +877,39 @@ const BarcodeDetail = () => {
           </div>
 
           <div className={styles.printSection}>
-            <Button 
-              block
-              fill="outline" 
-              color="primary"
-              onClick={handlePrintBody}
-              className={styles.printBodyBtn}
-            >
-              打印本体码
-            </Button>
-            <Button 
-              block
-              fill="outline" 
-              color="primary"
-              onClick={handlePrintInner}
-              className={styles.printInnerBtn}
-              style={{ marginTop: '12px' }}
-            >
-              打印内包装码
-            </Button>
-            <Button 
-              block
-              fill="outline" 
-              color="primary"
-              onClick={handlePrintLabel}
-              className={styles.printLabelBtn}
-              style={{ marginTop: '12px' }}
-            >
-              收货外标签码
-            </Button>
+            {type === 'body' && (
+              <Button 
+                block
+                fill="outline" 
+                color="primary"
+                onClick={handlePrintBody}
+                className={styles.printBodyBtn}
+              >
+                打印本体码
+              </Button>
+            )}
+            {type === 'inner' && (
+              <Button 
+                block
+                fill="outline" 
+                color="primary"
+                onClick={handlePrintInner}
+                className={styles.printInnerBtn}
+              >
+                打印内包装码
+              </Button>
+            )}
+            {type === 'label' && (
+              <Button 
+                block
+                fill="outline" 
+                color="primary"
+                onClick={handlePrintLabel}
+                className={styles.printLabelBtn}
+              >
+                收货外标签码
+              </Button>
+            )}
           </div>
         </div>
       </div>

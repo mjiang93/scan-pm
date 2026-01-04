@@ -6,7 +6,8 @@
 
 .scannerWrapper {
   flex: 1;
-  min-height: 300px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .actions {
@@ -34,5 +35,15 @@
 .inputArea {
   display: flex;
   gap: 12px;
-  margin-bottom: 16px;
+  align-items: center;
+  
+  :global {
+    .adm-input {
+      flex: 1;
+    }
+    
+    .adm-button {
+      flex-shrink: 0;
+    }
+  }
 }
