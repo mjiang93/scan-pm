@@ -35,21 +35,22 @@ const BarcodeEdit = () => {
         // 保存原始数据用于提交
         setOriginalData(data)
         
-        // 设置表单初始值
+        // 设置表单初始值 - 直接使用接口返回的字段名
         form.setFieldsValue({
           projectCode: data.projectCode || '',
-          materialCode: data.materialCode || '',
+          productCode: data.productCode || '',
           productionDateStart: data.productionDateStart ? new Date(parseInt(data.productionDateStart)) : null,
           productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)) : null,
           lineName: data.lineName || '',
           technicalVersion: data.technicalVersion || '',
-          nameModel: data.nameModel || '',
+          model: data.model || '', // 使用 model 字段
           cnt: data.cnt || '',
           unit: data.unit || '',
           supplierCode: data.supplierCode || '',
           factoryCode: data.factoryCode || '',
           codeSn: data.codeSn || '',
           code09: data.code09 || '',
+          materialCode: data.materialCode || '',
           drawingVersion: data.drawingVersion || '',
           accessoryCnt: data.accessoryCnt || '',
           deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)) : null
@@ -75,39 +76,30 @@ const BarcodeEdit = () => {
       setSaving(true)
       const values = await form.validateFields()
       
-      // 合并原始数据和表单数据，确保所有必需字段都存在
+      // 只传递接口需要的字段
       const updateData = {
-        // 保留原始数据中的所有字段
-        ...originalData,
-        // 更新ID
         id: parseInt(id),
-        // 更新表单编辑的字段
         projectCode: values.projectCode,
-        materialCode: values.materialCode,
-        productionDateStart: values.productionDateStart ? values.productionDateStart.getTime().toString() : originalData.productionDateStart,
-        productionDateEnd: values.productionDateEnd ? values.productionDateEnd.getTime().toString() : originalData.productionDateEnd,
+        supplierCode: values.supplierCode,
+        productionDateStart: values.productionDateStart ? values.productionDateStart.toISOString().split('T')[0] : '',
+        productionDateEnd: values.productionDateEnd ? values.productionDateEnd.toISOString().split('T')[0] : '',
         lineName: values.lineName,
         technicalVersion: values.technicalVersion,
-        nameModel: values.nameModel,
-        cnt: parseInt(values.cnt) || 0,
+        nameModel: values.model, // 接口字段是 nameModel
+        cnt: parseFloat(values.cnt) || 0,
         unit: values.unit,
-        supplierCode: values.supplierCode,
+        materialCode: values.materialCode,
         factoryCode: values.factoryCode,
         codeSn: values.codeSn,
         code09: values.code09,
         drawingVersion: values.drawingVersion,
         accessoryCnt: parseInt(values.accessoryCnt) || 0,
-        deliveryDate: values.deliveryDate ? values.deliveryDate.getTime().toString() : originalData.deliveryDate,
-        // 更新修改人和修改时间
-        modifier: userInfo?.userId || originalData.creator,
-        modifiyTime: new Date().getTime().toString(),
-        // 确保这些字段存在（从原始数据保留）
-        createTime: originalData.createTime,
-        creator: originalData.creator,
+        deliveryDate: values.deliveryDate ? values.deliveryDate.toISOString().split('T')[0] : '',
+        printStatus: originalData.printStatus || 0,
         btPrintCnt: originalData.btPrintCnt || 0,
         nbzPrintCnt: originalData.nbzPrintCnt || 0,
         wbzPrintCnt: originalData.wbzPrintCnt || 0,
-        printStatus: originalData.printStatus || 0
+        operator: userInfo?.userName || 'unknown'
       }
       
       console.log('保存数据:', updateData)
@@ -156,7 +148,7 @@ const BarcodeEdit = () => {
           </Form.Item>
 
           <Form.Item
-            name="materialCode"
+            name="productCode"
             label="产品编码"
             rules={[{ required: true, message: '请输入产品编码' }]}
           >
@@ -191,7 +183,7 @@ const BarcodeEdit = () => {
           </Form.Item>
 
           <Form.Item
-            name="nameModel"
+            name="model"
             label="名称型号"
           >
             <Input placeholder="请输入名称型号" />

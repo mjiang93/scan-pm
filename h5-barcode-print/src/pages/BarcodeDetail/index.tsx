@@ -1,14 +1,15 @@
 // 条码详情页面
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button, Card, Toast, Picker, DatePicker, Dialog, Input } from 'antd-mobile'
 import type { PickerValue } from 'antd-mobile/es/components/picker'
 import { PageContainer, Loading, Empty } from '@/components'
-import { getBarcodeDetail, editAccessory, editDelivery, editDrawingVersion, bindFactoryCode, scanBtcode, scanProjectCode, scanNbzcode } from '@/services/barcode'
+import { getBarcodeDetail, editAccessory, editDelivery, editDrawingVersion, bindFactoryCode, scanBtcode, scanNbzcode } from '@/services/barcode'
 import { useUserStore } from '@/stores'
 import styles from './index.module.less'
 
 interface BarcodeDetail {
+  id?: string
   projectCode: string
   productCode: string
   productionDate: string
@@ -57,7 +58,6 @@ const BarcodeDetail = () => {
   const [searchParams] = useSearchParams()
   const id = searchParams.get('id') || ''
   const btcode = searchParams.get('btcode') || ''
-  const projectCode = searchParams.get('projectCode') || ''
   const nbzcode = searchParams.get('nbzcode') || ''
   const type = searchParams.get('type') || ''
   const factoryCodeFromScan = searchParams.get('factoryCode') || ''
@@ -71,8 +71,12 @@ const BarcodeDetail = () => {
   const [drawingVersionDialogVisible, setDrawingVersionDialogVisible] = useState(false)
   const [drawingVersionInput, setDrawingVersionInput] = useState('')
   const { userInfo } = useUserStore()
+  const isRequestingRef = useRef(false)
 
   useEffect(() => {
+    // 防止重复请求
+    if (isRequestingRef.current) return
+    isRequestingRef.current = true
     // 如果是扫内包生成外装（type=label），调用scannbzcode接口
     if (type === 'label' && nbzcode) {
       const loadOuterPackageInfo = async () => {
@@ -92,63 +96,10 @@ const BarcodeDetail = () => {
           })
         } finally {
           setLoading(false)
+          isRequestingRef.current = false
         }
       }
       loadOuterPackageInfo()
-      return
-    }
-
-    // 如果是扫码生成SN码（type=body），调用scanpcode接口
-    if (type === 'body' && projectCode && userInfo) {
-      const loadProjectCodeInfo = async () => {
-        setLoading(true)
-        setError('')
-        try {
-          const data = await scanProjectCode({
-            projectCode,
-            operator: userInfo.userName || 'unknown'
-          })
-          
-          // 映射API返回的数据到组件需要的格式
-          const mappedDetail: BarcodeDetail = {
-            projectCode: data.projectCode || '',
-            productCode: data.materialCode || '',
-            productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
-            productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
-            productionLine: data.lineName || '',
-            techVersion: data.technicalVersion || '',
-            nameType: data.nameModel || '',
-            quantity: data.cnt || 0,
-            unit: data.unit || '',
-            supplierCode: data.supplierCode || '',
-            factoryCode: data.factoryCode || '',
-            snCode: data.codeSn || '',
-            code09: data.code09 || '',
-            materialCode: data.materialCode || '',
-            drawingVersion: data.drawingVersion || '',
-            attachments: data.accessoryCnt || 0,
-            deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : ''
-          }
-          setDetail(mappedDetail)
-          
-          Toast.show({
-            icon: 'success',
-            content: 'SN码生成成功'
-          })
-        } catch (error: unknown) {
-          console.error('生成SN码失败:', error)
-          const err = error as { response?: { data?: { msg?: string } }; message?: string }
-          const errorMsg = err?.response?.data?.msg || err?.message || '生成SN码失败'
-          setError(errorMsg)
-          Toast.show({
-            icon: 'fail',
-            content: errorMsg
-          })
-        } finally {
-          setLoading(false)
-        }
-      }
-      loadProjectCodeInfo()
       return
     }
 
@@ -171,6 +122,7 @@ const BarcodeDetail = () => {
           })
         } finally {
           setLoading(false)
+          isRequestingRef.current = false
         }
       }
       loadInnerPackageInfo()
@@ -178,7 +130,10 @@ const BarcodeDetail = () => {
     }
 
     // 原有的根据id加载详情逻辑
-    if (!id) return
+    if (!id) {
+      isRequestingRef.current = false
+      return
+    }
 
     const loadDetail = async () => {
       setLoading(true)
@@ -187,14 +142,15 @@ const BarcodeDetail = () => {
         const data = await getBarcodeDetail(id)
         // 映射API返回的数据到组件需要的格式
         const mappedDetail: BarcodeDetail = {
+          id: data.id,
           projectCode: data.projectCode || '',
-          productCode: data.materialCode || '',
+          productCode: data.productCode || '', // 修正：使用 productCode 而不是 materialCode
           productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
           productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
           productionLine: data.lineName || '',
           techVersion: data.technicalVersion || '',
-          nameType: data.nameModel || '',
-          quantity: data.cnt || 0,
+          nameType: data.nameModel || data.model || '', // 修正：nameModel 为空时使用 model
+          quantity: data.cnt ? parseFloat(data.cnt) : 0,
           unit: data.unit || '',
           supplierCode: data.supplierCode || '',
           factoryCode: data.factoryCode || '',
@@ -217,11 +173,12 @@ const BarcodeDetail = () => {
         })
       } finally {
         setLoading(false)
+        isRequestingRef.current = false
       }
     }
 
     loadDetail()
-  }, [id, type, btcode, projectCode, nbzcode, userInfo])
+  }, [id, type, btcode, nbzcode, userInfo])
 
   // 处理从扫码页面返回的出厂码绑定
   useEffect(() => {
@@ -250,14 +207,15 @@ const BarcodeDetail = () => {
         if (!isMounted) return
         
         const mappedDetail: BarcodeDetail = {
+          id: data.id,
           projectCode: data.projectCode || '',
-          productCode: data.materialCode || '',
+          productCode: data.productCode || '',
           productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
           productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
           productionLine: data.lineName || '',
           techVersion: data.technicalVersion || '',
-          nameType: data.nameModel || '',
-          quantity: data.cnt || 0,
+          nameType: data.nameModel || data.model || '',
+          quantity: data.cnt ? parseFloat(data.cnt) : 0,
           unit: data.unit || '',
           supplierCode: data.supplierCode || '',
           factoryCode: data.factoryCode || '',
@@ -270,8 +228,9 @@ const BarcodeDetail = () => {
         }
         setDetail(mappedDetail)
         
-        // 清除URL中的factoryCode参数
-        window.history.replaceState({}, '', `/barcode-detail?id=${id}`)
+        // 清除URL中的factoryCode参数，但保留type参数
+        const newUrl = type ? `/barcode-detail?id=${id}&type=${type}` : `/barcode-detail?id=${id}`
+        window.history.replaceState({}, '', newUrl)
       } catch (error) {
         if (!isMounted) return
         
@@ -319,10 +278,21 @@ const BarcodeDetail = () => {
 
     const accessoryCnt = typeof value[0] === 'string' ? parseInt(value[0]) : value[0]
     
+    // 使用 detail.id 或 URL 参数中的 id
+    const barcodeId = detail?.id || id
+    
+    if (!barcodeId) {
+      Toast.show({
+        icon: 'fail',
+        content: '条码ID不存在，无法修改附件'
+      })
+      return
+    }
+    
     try {
       await editAccessory({
         accessoryCnt,
-        ids: [parseInt(id)],
+        ids: [parseInt(barcodeId)],
         operator: userInfo?.userName || 'unknown'
       })
       
@@ -332,16 +302,17 @@ const BarcodeDetail = () => {
       })
       
       // 重新加载详情
-      const data = await getBarcodeDetail(id)
+      const data = await getBarcodeDetail(barcodeId)
       const mappedDetail: BarcodeDetail = {
+        id: data.id,
         projectCode: data.projectCode || '',
-        productCode: data.materialCode || '',
+        productCode: data.productCode || '',
         productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
         productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
         productionLine: data.lineName || '',
         techVersion: data.technicalVersion || '',
-        nameType: data.nameModel || '',
-        quantity: data.cnt || 0,
+        nameType: data.nameModel || data.model || '',
+        quantity: data.cnt ? parseFloat(data.cnt) : 0,
         unit: data.unit || '',
         supplierCode: data.supplierCode || '',
         factoryCode: data.factoryCode || '',
@@ -376,9 +347,20 @@ const BarcodeDetail = () => {
       return
     }
 
+    // 使用 detail.id 或 URL 参数中的 id
+    const barcodeId = detail?.id || id
+    
+    if (!barcodeId) {
+      Toast.show({
+        icon: 'fail',
+        content: '条码ID不存在，无法修改图纸版本'
+      })
+      return
+    }
+
     try {
       await editDrawingVersion({
-        id,
+        id: barcodeId,
         drawingVersion: drawingVersionInput,
         operator: userInfo?.userName || 'unknown'
       })
@@ -391,16 +373,17 @@ const BarcodeDetail = () => {
       setDrawingVersionDialogVisible(false)
       
       // 重新加载详情
-      const data = await getBarcodeDetail(id)
+      const data = await getBarcodeDetail(barcodeId)
       const mappedDetail: BarcodeDetail = {
+        id: data.id,
         projectCode: data.projectCode || '',
-        productCode: data.materialCode || '',
+        productCode: data.productCode || '',
         productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
         productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
         productionLine: data.lineName || '',
         techVersion: data.technicalVersion || '',
-        nameType: data.nameModel || '',
-        quantity: data.cnt || 0,
+        nameType: data.nameModel || data.model || '',
+        quantity: data.cnt ? parseFloat(data.cnt) : 0,
         unit: data.unit || '',
         supplierCode: data.supplierCode || '',
         factoryCode: data.factoryCode || '',
@@ -426,13 +409,24 @@ const BarcodeDetail = () => {
   }
 
   const handleDeliveryDateConfirm = async (value: Date) => {
+    // 使用 detail.id 或 URL 参数中的 id
+    const barcodeId = detail?.id || id
+    
+    if (!barcodeId) {
+      Toast.show({
+        icon: 'fail',
+        content: '条码ID不存在，无法修改送货日期'
+      })
+      return
+    }
+    
     try {
       // 转换为ISO格式字符串
       const deliveryDate = value.toISOString()
       
       await editDelivery({
         deliveryDate,
-        ids: [parseInt(id)],
+        ids: [parseInt(barcodeId)],
         operator: userInfo?.userName || 'unknown'
       })
       
@@ -442,16 +436,17 @@ const BarcodeDetail = () => {
       })
       
       // 重新加载详情
-      const data = await getBarcodeDetail(id)
+      const data = await getBarcodeDetail(barcodeId)
       const mappedDetail: BarcodeDetail = {
+        id: data.id,
         projectCode: data.projectCode || '',
-        productCode: data.materialCode || '',
+        productCode: data.productCode || '',
         productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
         productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
         productionLine: data.lineName || '',
         techVersion: data.technicalVersion || '',
-        nameType: data.nameModel || '',
-        quantity: data.cnt || 0,
+        nameType: data.nameModel || data.model || '',
+        quantity: data.cnt ? parseFloat(data.cnt) : 0,
         unit: data.unit || '',
         supplierCode: data.supplierCode || '',
         factoryCode: data.factoryCode || '',
@@ -473,10 +468,13 @@ const BarcodeDetail = () => {
   }
 
   const handleEdit = () => {
-    navigate(`/barcode-edit?id=${id}`)
+    const barcodeId = detail?.id || id
+    navigate(`/barcode-edit?id=${barcodeId}`)
   }
 
   const handlePrintBody = () => {
+    const barcodeId = detail?.id || id
+    
     // 验证必填字段：图纸版本、附件、出厂码
     if (!detail?.drawingVersion || !detail?.drawingVersion.trim()) {
       Toast.show({
@@ -503,22 +501,25 @@ const BarcodeDetail = () => {
     }
     
     // 跳转到打印本体码页面，传递当前条码ID
-    navigate(`/print-body?id=${encodeURIComponent(id)}&from=detail`)
+    navigate(`/print-body?id=${encodeURIComponent(barcodeId)}&from=detail`)
   }
 
   const handlePrintInner = () => {
+    const barcodeId = detail?.id || id
     // 跳转到打印内包装码页面，传递当前条码ID
-    navigate(`/print-inner?id=${encodeURIComponent(id)}&from=detail`)
+    navigate(`/print-inner?id=${encodeURIComponent(barcodeId)}&from=detail`)
   }
 
   const handlePrintLabel = () => {
+    const barcodeId = detail?.id || id
     // 跳转到收货外标签码页面，传递当前条码ID
-    navigate(`/print-label?id=${encodeURIComponent(id)}&from=detail`)
+    navigate(`/print-label?id=${encodeURIComponent(barcodeId)}&from=detail`)
   }
 
   const handleBindMomCode = () => {
-    // 跳转到扫码页面，传递当前条码ID和类型
-    navigate(`/scan?type=mom&id=${encodeURIComponent(id)}`)
+    const barcodeId = detail?.id || id
+    // 跳转到扫码页面，传递当前条码ID、类型和原始type参数
+    navigate(`/scan?type=mom&id=${encodeURIComponent(barcodeId)}&returnType=${encodeURIComponent(type || '')}`)
   }
 
   // 创建右侧按钮元素
@@ -901,41 +902,46 @@ const BarcodeDetail = () => {
             </Button>
           </div>
 
-          {!id && (
+          {/* 打印按钮区域 - 根据条件显示 */}
+          {((!id && type === 'body') || (id && type === 'body')) && (
             <div className={styles.printSection}>
-              {type === 'body' && (
-                <Button 
-                  block
-                  fill="outline" 
-                  color="primary"
-                  onClick={handlePrintBody}
-                  className={styles.printBodyBtn}
-                >
-                  打印本体码
-                </Button>
-              )}
-              {type === 'inner' && (
-                <Button 
-                  block
-                  fill="outline" 
-                  color="primary"
-                  onClick={handlePrintInner}
-                  className={styles.printInnerBtn}
-                >
-                  打印内包装码
-                </Button>
-              )}
-              {type === 'label' && (
-                <Button 
-                  block
-                  fill="outline" 
-                  color="primary"
-                  onClick={handlePrintLabel}
-                  className={styles.printLabelBtn}
-                >
-                  收货外标签码
-                </Button>
-              )}
+              <Button 
+                block
+                fill="outline" 
+                color="primary"
+                onClick={handlePrintBody}
+                className={styles.printBodyBtn}
+              >
+                打印本体码
+              </Button>
+            </div>
+          )}
+
+          {!id && type === 'inner' && (
+            <div className={styles.printSection}>
+              <Button 
+                block
+                fill="outline" 
+                color="primary"
+                onClick={handlePrintInner}
+                className={styles.printInnerBtn}
+              >
+                打印内包装码
+              </Button>
+            </div>
+          )}
+
+          {!id && type === 'label' && (
+            <div className={styles.printSection}>
+              <Button 
+                block
+                fill="outline" 
+                color="primary"
+                onClick={handlePrintLabel}
+                className={styles.printLabelBtn}
+              >
+                收货外标签码
+              </Button>
             </div>
           )}
         </div>
@@ -972,11 +978,17 @@ const BarcodeDetail = () => {
         title="修改图纸版本"
         content={
           <div style={{ padding: '12px 0' }}>
-            <div style={{ marginBottom: '8px', color: '#666' }}>图纸版本</div>
+            <div style={{ marginBottom: '8px', color: '#666' }}>图纸版本（最多3位字符）</div>
             <Input
               placeholder="请输入图纸版本"
               value={drawingVersionInput}
-              onChange={setDrawingVersionInput}
+              onChange={(val) => {
+                // 限制只能输入3位字符
+                if (val.length <= 3) {
+                  setDrawingVersionInput(val)
+                }
+              }}
+              maxLength={3}
               style={{ 
                 '--font-size': '16px',
                 '--text-align': 'left'

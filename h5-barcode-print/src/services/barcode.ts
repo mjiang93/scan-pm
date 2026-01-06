@@ -147,7 +147,7 @@ export function bindFactoryCode(params: {
   factoryCode: string
   operator: string
 }): Promise<any> {
-  return request.get('/pda/scanfcode', { params })
+  return request.post('/pda/scanfcode', params)
 }
 
 /**
@@ -168,19 +168,23 @@ export function scanBtcode(btcode: string): Promise<{
 /**
  * 扫描项目编码，生成条码信息
  */
-export function scanProjectCode(params: {
+export function scanProjectCode(data: {
   projectCode: string
   operator: string
 }): Promise<{
   id: string
   projectCode: string
+  productCode: string
+  productName: string
+  orderCode: string
   materialCode: string
   nameModel: string
+  model: string
   drawingVersion: string
   technicalVersion: string
   supplierCode: string
   unit: string
-  cnt: number
+  cnt: string
   lineName: string
   productionDateStart: string
   productionDateEnd: string
@@ -188,13 +192,18 @@ export function scanProjectCode(params: {
   code09: string
   codeSn: string
   factoryCode: string
-  accessoryCnt: number
+  pohh: string
+  accessoryCnt: number | null
   printStatus: number
   btPrintCnt: number
   nbzPrintCnt: number
   wbzPrintCnt: number
+  creator: string
+  createTime: string
+  modifier: string
+  modifiyTime: string | null
 }> {
-  return request.get('/pda/scanpcode', { params })
+  return request.post('/pda/scanpcode', data)
 }
 
 /**

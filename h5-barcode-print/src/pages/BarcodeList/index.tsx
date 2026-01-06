@@ -52,6 +52,8 @@ const BarcodeList = () => {
   const loadingRef = useRef(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+  const searchDebounceTimer = useRef<NodeJS.Timeout | null>(null)
+  const productCodeDebounceTimer = useRef<NodeJS.Timeout | null>(null)
 
   const tabOptions = [
     { label: 'SN码管理', value: 'SN码管理' },
@@ -209,6 +211,56 @@ const BarcodeList = () => {
     loadBarcodeList(1, false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // 监听搜索值变化，实现防抖搜索
+  useEffect(() => {
+    // 清除之前的定时器
+    if (searchDebounceTimer.current) {
+      clearTimeout(searchDebounceTimer.current)
+    }
+
+    // 设置新的定时器
+    searchDebounceTimer.current = setTimeout(() => {
+      // 重置分页并搜索
+      setBarcodeList([])
+      setCurrentPage(1)
+      setHasMore(true)
+      loadBarcodeList(1, false)
+    }, 500)
+
+    // 清理函数
+    return () => {
+      if (searchDebounceTimer.current) {
+        clearTimeout(searchDebounceTimer.current)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchValue])
+
+  // 监听产品编码搜索值变化，实现防抖搜索
+  useEffect(() => {
+    // 清除之前的定时器
+    if (productCodeDebounceTimer.current) {
+      clearTimeout(productCodeDebounceTimer.current)
+    }
+
+    // 设置新的定时器
+    productCodeDebounceTimer.current = setTimeout(() => {
+      // 重置分页并搜索
+      setBarcodeList([])
+      setCurrentPage(1)
+      setHasMore(true)
+      loadBarcodeList(1, false)
+    }, 500)
+
+    // 清理函数
+    return () => {
+      if (productCodeDebounceTimer.current) {
+        clearTimeout(productCodeDebounceTimer.current)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productCodeSearch])
 
   // 加载更多数据
   const loadMore = async () => {
