@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button, Toast } from 'antd-mobile'
 import { PageContainer, QRCode, Barcode, Loading } from '@/components'
-import { getBarcodeDetail, updatePrintStatus } from '@/services/barcode'
+import { scanBtcode, updatePrintStatus } from '@/services/barcode'
 import { useUserStore } from '@/stores'
 import styles from './index.module.less'
 
@@ -24,37 +24,40 @@ interface PrintData {
 const PrintInner = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const id = searchParams.get('id') || ''
+  const btcode = searchParams.get('btcode') || ''
   const [printData, setPrintData] = useState<PrintData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [recordId, setRecordId] = useState<string>('')
   const printRef = useRef<HTMLDivElement>(null)
   const { userInfo } = useUserStore()
 
   const loadPrintData = async () => {
     setLoading(true)
     try {
-      // 调用详情接口获取条码信息
-      const detail = await getBarcodeDetail(id)
+      // 调用扫本体码接口获取内包装码打印信息
+      const detail = await scanBtcode(btcode)
       
       if (detail) {
-        // 根据详情接口返回的数据映射到打印数据
+        // 保存记录ID用于更新打印状态
+        setRecordId(detail.id)
+        
         // 格式化日期
-        const dcDate = detail.deliveryDate 
-          ? new Date(parseInt(detail.deliveryDate)).toISOString().split('T')[0]
+        const dcDate = detail.dcDate 
+          ? new Date(parseInt(detail.dcDate)).toISOString().split('T')[0]
           : ''
         
         const mappedData: PrintData = {
           no: 'G1-1',
           size: '77mm*50mm',
-          partNo: detail.materialCode || '',
-          barcode: detail.materialCode || '',
-          qty: detail.cnt || 1,
-          description: detail.nameModel || '',
+          partNo: detail.partNo || '',
+          barcode: detail.partNo || '',
+          qty: detail.qty ? parseInt(detail.qty) : 1,
+          description: detail.remark || '',
           dc: dcDate,
           supplierCode: detail.supplierCode || '',
           smallBarcode: detail.supplierCode || '',
-          sn: `S${detail.codeSn || ''}IP${detail.materialCode || ''}2P${detail.technicalVersion || ''}`,
-          qrCodeData: `PartNo:${detail.materialCode || ''};QTY:${detail.cnt || 1};DC:${dcDate};SN:${detail.codeSn || ''}`
+          sn: detail.codeSN || '',
+          qrCodeData: `PartNo:${detail.partNo || ''};QTY:${detail.qty || 1};DC:${dcDate};SN:${detail.codeSN || ''}`
         }
         setPrintData(mappedData)
       }
@@ -70,13 +73,13 @@ const PrintInner = () => {
   }
 
   useEffect(() => {
-    if (id) {
+    if (btcode) {
       loadPrintData()
     } else {
       setLoading(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id])
+  }, [btcode])
 
   const handlePrint = async () => {
     if (!printData) {
@@ -92,9 +95,9 @@ const PrintInner = () => {
       window.print()
       
       // 更新打印状态
-      if (id) {
+      if (recordId) {
         await updatePrintStatus({
-          id: parseInt(id),
+          id: parseInt(recordId),
           operator: userInfo?.userName || 'unknown',
           nbzPrintCnt: 1
         })

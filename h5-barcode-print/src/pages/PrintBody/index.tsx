@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button, Toast } from 'antd-mobile'
 import { PageContainer, QRCode, Barcode, Loading } from '@/components'
-import { getBarcodeDetail, updatePrintStatus } from '@/services/barcode'
+import { getBarcodeDetail, updatePrintStatus, getBtPrintInfo } from '@/services/barcode'
 import { useUserStore } from '@/stores'
 import styles from './index.module.less'
 
@@ -14,9 +14,8 @@ interface PrintData {
   rev: string
   model: string
   sn: string
-  barcode1: string
-  barcode2: string
   qrCodeData: string
+  barcodes: string[] // 改为数组，用于循环显示多个条形码
 }
 
 const PrintBody = () => {
@@ -31,26 +30,26 @@ const PrintBody = () => {
   const loadPrintData = async () => {
     setLoading(true)
     try {
-      // 调用详情接口获取条码信息
-      const detail = await getBarcodeDetail(id)
+      // 先调用详情接口获取条码信息
+      await getBarcodeDetail(id)
       
-      if (detail) {
-        // 根据详情接口返回的数据映射到打印数据
-        // 根据图片显示的格式构建条形码数据
-        // 格式：S{SN码}IP{物料编码}2P{技术版本}-001
-        const barcode1 = `S${detail.codeSn || ''}IP${detail.materialCode || ''}2P${detail.technicalVersion || ''}-001`
-        const barcode2 = `S${detail.codeSn || ''}IP${detail.materialCode || ''}2P${detail.technicalVersion || ''}-002`
-        
+      // 再调用本体码打印预览接口（生成条码）
+      const btPrintData = await getBtPrintInfo({
+        id,
+        operator: userInfo?.userName || ''
+      })
+      
+      if (btPrintData) {
+        // 根据btprint接口返回的数据映射到打印数据
         const mappedData: PrintData = {
           no: 'G1-1', // 固定值或从配置获取
           size: '42mm*10mm', // 固定值或从配置获取
-          pn: detail.materialCode || '', // PN使用物料编码
-          rev: detail.technicalVersion || '', // Rev使用技术版本
-          model: detail.nameModel || '', // Model使用名称型号
-          sn: detail.codeSn || '', // SN使用SN码
-          barcode1: barcode1,
-          barcode2: barcode2,
-          qrCodeData: `PN:${detail.materialCode || ''};Rev:${detail.technicalVersion || ''};Model:${detail.nameModel || ''};SN:${detail.codeSn || ''}`
+          pn: btPrintData.pnCode || '', // PN使用pnCode
+          rev: btPrintData.revCode || '', // Rev使用revCode
+          model: btPrintData.modelCode || '', // Model使用modelCode
+          sn: btPrintData.codeSN || '', // SN使用codeSN
+          qrCodeData: `PN:${btPrintData.pnCode || ''};Rev:${btPrintData.revCode || ''};Model:${btPrintData.modelCode || ''};SN:${btPrintData.codeSN || ''}`,
+          barcodes: btPrintData.fjList || [] // 条形码列表
         }
         setPrintData(mappedData)
       }
@@ -167,24 +166,17 @@ const PrintBody = () => {
               </div>
             </div>
 
-            {/* 条形码区域 */}
-            <div className={styles.barcodeSection}>
-              <Barcode 
-                value={printData.barcode1}
-                width={1.5}
-                height={50}
-                fontSize={10}
-              />
-            </div>
-
-            <div className={styles.barcodeSection}>
-              <Barcode 
-                value={printData.barcode2}
-                width={1.5}
-                height={50}
-                fontSize={10}
-              />
-            </div>
+            {/* 条形码区域 - 循环显示 */}
+            {printData.barcodes.map((barcodeValue, index) => (
+              <div key={index} className={styles.barcodeSection}>
+                <Barcode 
+                  value={barcodeValue}
+                  width={1.5}
+                  height={50}
+                  fontSize={10}
+                />
+              </div>
+            ))}
           </div>
         </div>
 

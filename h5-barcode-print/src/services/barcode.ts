@@ -48,7 +48,7 @@ export function getBarcodeDetail(id: string): Promise<any> {
 }
 
 /**
- * 分页查询条码列表
+ * 分页查询条码列表 (PC端)
  */
 export function getBarcodeListPage(params: {
   deliveryDateStart?: string
@@ -61,6 +61,29 @@ export function getBarcodeListPage(params: {
   empty: boolean
 }> {
   return request.post('/pc/page', params)
+}
+
+/**
+ * 分页查询条码列表 (PDA端)
+ */
+export function getPdaBarcodeListPage(params: {
+  projectCode?: string
+  orderCode?: string
+  factoryCode?: string
+  productCode?: string
+  codeSn?: string
+  code09?: string
+  deliveryDateStart?: string
+  deliveryDateEnd?: string
+  printStatus?: number
+  page: number
+  size: number
+}): Promise<{
+  result: any[]
+  total: number
+  empty: boolean
+}> {
+  return request.post('/pda/page', params)
 }
 
 /**
@@ -191,4 +214,14 @@ export function scanNbzcode(nbzcode: string): Promise<{
   saveClean: string
 }> {
   return request.get('/pda/scannbzcode', { params: { nbzcode } })
+}
+
+/**
+ * 本体码打印预览-生成条码-更新图纸版本后才能打印
+ */
+export function getBtPrintInfo(params: {
+  id: string
+  operator: string
+}): Promise<any> {
+  return request.post('/pc/btprint', null, { params })
 }

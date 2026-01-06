@@ -477,6 +477,31 @@ const BarcodeDetail = () => {
   }
 
   const handlePrintBody = () => {
+    // 验证必填字段：图纸版本、附件、出厂码
+    if (!detail?.drawingVersion || !detail?.drawingVersion.trim()) {
+      Toast.show({
+        icon: 'fail',
+        content: '请先添加图纸版本'
+      })
+      return
+    }
+    
+    if (!detail?.attachments || detail.attachments === 0) {
+      Toast.show({
+        icon: 'fail',
+        content: '请先添加附件数量'
+      })
+      return
+    }
+    
+    if (!detail?.factoryCode || !detail?.factoryCode.trim()) {
+      Toast.show({
+        icon: 'fail',
+        content: '请先绑定出厂码'
+      })
+      return
+    }
+    
     // 跳转到打印本体码页面，传递当前条码ID
     navigate(`/print-body?id=${encodeURIComponent(id)}&from=detail`)
   }
@@ -876,41 +901,43 @@ const BarcodeDetail = () => {
             </Button>
           </div>
 
-          <div className={styles.printSection}>
-            {type === 'body' && (
-              <Button 
-                block
-                fill="outline" 
-                color="primary"
-                onClick={handlePrintBody}
-                className={styles.printBodyBtn}
-              >
-                打印本体码
-              </Button>
-            )}
-            {type === 'inner' && (
-              <Button 
-                block
-                fill="outline" 
-                color="primary"
-                onClick={handlePrintInner}
-                className={styles.printInnerBtn}
-              >
-                打印内包装码
-              </Button>
-            )}
-            {type === 'label' && (
-              <Button 
-                block
-                fill="outline" 
-                color="primary"
-                onClick={handlePrintLabel}
-                className={styles.printLabelBtn}
-              >
-                收货外标签码
-              </Button>
-            )}
-          </div>
+          {!id && (
+            <div className={styles.printSection}>
+              {type === 'body' && (
+                <Button 
+                  block
+                  fill="outline" 
+                  color="primary"
+                  onClick={handlePrintBody}
+                  className={styles.printBodyBtn}
+                >
+                  打印本体码
+                </Button>
+              )}
+              {type === 'inner' && (
+                <Button 
+                  block
+                  fill="outline" 
+                  color="primary"
+                  onClick={handlePrintInner}
+                  className={styles.printInnerBtn}
+                >
+                  打印内包装码
+                </Button>
+              )}
+              {type === 'label' && (
+                <Button 
+                  block
+                  fill="outline" 
+                  color="primary"
+                  onClick={handlePrintLabel}
+                  className={styles.printLabelBtn}
+                >
+                  收货外标签码
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button, Toast } from 'antd-mobile'
 import { PageContainer, QRCode, Barcode, Loading } from '@/components'
-import { getBarcodeDetail, updatePrintStatus } from '@/services/barcode'
+import { scanNbzcode, updatePrintStatus } from '@/services/barcode'
 import { useUserStore } from '@/stores'
 import styles from './index.module.less'
 
@@ -27,19 +27,23 @@ interface PrintData {
 const PrintLabel = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const id = searchParams.get('id') || ''
+  const btcode = searchParams.get('btcode') || '' // 从URL获取本体码
   const [printData, setPrintData] = useState<PrintData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [recordId, setRecordId] = useState<string>('') // 保存记录ID用于更新打印状态
   const printRef = useRef<HTMLDivElement>(null)
   const { userInfo } = useUserStore()
 
   const loadPrintData = async () => {
     setLoading(true)
     try {
-      // 调用详情接口获取条码信息
-      const detail = await getBarcodeDetail(id)
+      // 调用扫内包装码接口获取外包装码打印信息
+      const detail = await scanNbzcode(btcode)
       
       if (detail) {
+        // 保存记录ID
+        setRecordId(detail.id)
+        
         // 格式化日期
         const deliveryDate = detail.deliveryDate 
           ? new Date(parseInt(detail.deliveryDate)).toISOString().split('T')[0]
@@ -52,13 +56,13 @@ const PrintLabel = () => {
           materialCode: detail.materialCode || '',
           nameModel: detail.nameModel || '',
           qty: detail.cnt || 0,
-          unit: detail.unit || 'PCS',
+          unit: detail.unit || '',
           supplierCode: detail.supplierCode || '',
           deliveryDate: deliveryDate,
-          poNumber: detail.code09 || '', // 使用09码作为PO号
-          batchNumber: detail.codeSn || '', // 使用SN码作为批号
-          storageLocation: 'S50', // 固定值或从配置获取
-          sn: `S${detail.codeSn || ''}IP${detail.materialCode || ''}2P${detail.technicalVersion || ''}`,
+          poNumber: detail.poNo || '', // PO行号
+          batchNumber: detail.codeSN || '', // SN码作为批号
+          storageLocation: detail.saveClean || '', // 存储/清洁
+          sn: detail.codeSN || '', // 直接使用返回的SN码
           qrCodeData: `Material:${detail.materialCode || ''};QTY:${detail.cnt || 0};Supplier:${detail.supplierCode || ''};Date:${deliveryDate}`
         }
         setPrintData(mappedData)
@@ -75,13 +79,13 @@ const PrintLabel = () => {
   }
 
   useEffect(() => {
-    if (id) {
+    if (btcode) {
       loadPrintData()
     } else {
       setLoading(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id])
+  }, [btcode])
 
   const handlePrint = async () => {
     if (!printData) {
@@ -97,9 +101,9 @@ const PrintLabel = () => {
       window.print()
       
       // 更新打印状态
-      if (id) {
+      if (recordId) {
         await updatePrintStatus({
-          id: parseInt(id),
+          id: parseInt(recordId),
           operator: userInfo?.userName || 'unknown',
           wbzPrintCnt: 1
         })

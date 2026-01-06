@@ -25,14 +25,14 @@ const Scan = () => {
     if (type === 'mom' && id) {
       navigate(`/barcode-detail?id=${encodeURIComponent(id)}&factoryCode=${encodeURIComponent(code)}`)
     } else if (type === 'inner') {
-      // 扫SN打印内包装，直接跳转到详情页面
-      navigate(`/barcode-detail?btcode=${encodeURIComponent(code)}&type=inner`)
+      // 扫SN打印内包装，直接跳转到打印内包装码页面
+      navigate(`/print-inner?btcode=${encodeURIComponent(code)}`)
     } else if (type === 'body') {
       // 扫码生成SN码，直接跳转到详情页面
       navigate(`/barcode-detail?projectCode=${encodeURIComponent(code)}&type=body`)
     } else if (type === 'label') {
-      // 扫内包生成外装，直接跳转到详情页面
-      navigate(`/barcode-detail?nbzcode=${encodeURIComponent(code)}&type=label`)
+      // 扫内包生成外装，直接跳转到打印外包装标签页面
+      navigate(`/print-label?nbzcode=${encodeURIComponent(code)}`)
     } else {
       navigate(`/scan-result?code=${encodeURIComponent(code)}&type=${type}`)
     }
@@ -55,14 +55,14 @@ const Scan = () => {
     if (type === 'mom' && id) {
       navigate(`/barcode-detail?id=${encodeURIComponent(id)}&factoryCode=${encodeURIComponent(manualCode)}`)
     } else if (type === 'inner') {
-      // 扫SN打印内包装，直接跳转到详情页面
-      navigate(`/barcode-detail?btcode=${encodeURIComponent(manualCode)}&type=inner`)
+      // 扫SN打印内包装，直接跳转到打印内包装码页面
+      navigate(`/print-inner?btcode=${encodeURIComponent(manualCode)}`)
     } else if (type === 'body') {
       // 扫码生成SN码，直接跳转到详情页面
       navigate(`/barcode-detail?projectCode=${encodeURIComponent(manualCode)}&type=body`)
     } else if (type === 'label') {
-      // 扫内包生成外装，直接跳转到详情页面
-      navigate(`/barcode-detail?nbzcode=${encodeURIComponent(manualCode)}&type=label`)
+      // 扫内包生成外装，直接跳转到打印外包装标签页面
+      navigate(`/print-label?nbzcode=${encodeURIComponent(manualCode)}`)
     } else {
       navigate(`/scan-result?code=${encodeURIComponent(manualCode)}&type=${type}`)
     }
