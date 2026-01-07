@@ -3,33 +3,40 @@
   display: flex;
   flex-direction: column;
   background: #f5f5f5;
+  padding: 12px;
 }
 
 .form {
   flex: 1;
   overflow: auto;
-  background: #fff;
-  padding: 16px;
 
   :global {
-    .adm-form-item {
-      padding: 12px 0;
-      border-bottom: 1px solid #f0f0f0;
+    // 表单头部样式
+    .adm-form-header {
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 500;
+      color: #333;
+    }
 
-      &:last-child {
-        border-bottom: none;
-      }
+    // 表单项样式
+    .adm-list-item {
+      padding-left: 16px;
+      padding-right: 16px;
     }
 
     .adm-form-item-label {
-      font-size: 14px;
-      color: #666;
-      min-width: 90px;
-      white-space: nowrap;
+      font-size: 15px;
+      color: #333;
+    }
+
+    // 必填星号样式
+    .adm-form-item-required-asterisk {
+      color: #ff3141;
     }
 
     .adm-input {
-      font-size: 14px;
+      font-size: 15px;
       text-align: right;
       
       input {
@@ -37,89 +44,52 @@
       }
     }
 
-    .adm-date-picker {
-      font-size: 14px;
-      text-align: right;
+    // 禁用状态样式
+    .adm-input-disabled {
+      opacity: 1;
+      color: #999;
+      
+      input {
+        color: #999;
+      }
     }
-  }
-}
 
-.dateRangeItem {
-  :global(.adm-form-item-child) {
-    flex: 1;
-  }
-}
+    // 错误提示样式
+    .adm-form-item-feedback-error {
+      font-size: 13px;
+      color: #ff3141;
+      padding-left: 16px;
+      padding-top: 4px;
+    }
 
-.dateRange {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: flex-end;
-
-  :global(.adm-date-picker) {
-    flex: 1;
-    text-align: right;
-  }
-}
-
-.dateSeparator {
-  color: #999;
-  font-size: 14px;
-  padding: 0 4px;
-}
-
-.inlineGroup {
-  :global(.adm-form-item-child) {
-    flex: 1;
-  }
-}
-
-.inlineFields {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-
-  :global(.adm-form-item) {
-    flex: 1;
-    padding: 0;
-    border: none;
-    margin: 0;
-  }
-
-  :global(.adm-form-item-label) {
-    min-width: auto;
-    margin-right: 8px;
-  }
-}
-
-.halfInput {
-  flex: 1;
-}
-
-.footer {
-  padding: 16px;
-  background: #fff;
-  border-top: 1px solid #f0f0f0;
-
-  :global(.adm-button) {
-    height: 44px;
-    font-size: 16px;
-    border-radius: 8px;
+    // 表单底部按钮
+    .adm-form-footer {
+      padding: 16px;
+      
+      .adm-button {
+        height: 44px;
+        font-size: 16px;
+        border-radius: 8px;
+      }
+    }
   }
 }
 
 // 响应式适配
 @media (max-width: 375px) {
+  .container {
+    padding: 8px;
+  }
+
   .form {
-    padding: 12px;
-  }
+    :global {
+      .adm-form-item-label {
+        font-size: 14px;
+      }
 
-  :global(.adm-form-item-label) {
-    min-width: 80px;
-    font-size: 13px;
-  }
-
-  :global(.adm-input) {
-    font-size: 13px;
+      .adm-input {
+        font-size: 14px;
+      }
+    }
   }
 }

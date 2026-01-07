@@ -1,7 +1,7 @@
 // 打印内包装码页面
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Button, Toast } from 'antd-mobile'
+import { Button, Toast, ErrorBlock } from 'antd-mobile'
 import { PageContainer, QRCode, Barcode, Loading } from '@/components'
 import { scanBtcode, updatePrintStatus } from '@/services/barcode'
 import { useUserStore } from '@/stores'
@@ -27,12 +27,14 @@ const PrintInner = () => {
   const btcode = searchParams.get('btcode') || ''
   const [printData, setPrintData] = useState<PrintData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string>('')
   const [recordId, setRecordId] = useState<string>('')
   const printRef = useRef<HTMLDivElement>(null)
   const { userInfo } = useUserStore()
 
   const loadPrintData = async () => {
     setLoading(true)
+    setErrorMessage('')
     try {
       // 调用扫本体码接口获取内包装码打印信息
       const detail = await scanBtcode(btcode)
@@ -61,11 +63,13 @@ const PrintInner = () => {
         }
         setPrintData(mappedData)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('加载打印数据失败:', error)
+      const errMsg = error?.message || error?.msg || '加载打印数据失败'
+      setErrorMessage(errMsg)
       Toast.show({
         icon: 'fail',
-        content: '加载打印数据失败'
+        content: errMsg
       })
     } finally {
       setLoading(false)
@@ -118,9 +122,17 @@ const PrintInner = () => {
   if (!printData) {
     return (
       <PageContainer title="打印内包装码">
-        <div className={styles.error}>
-          <p>没有可打印的数据</p>
-          <Button color="primary" onClick={() => navigate('/home')}>
+        <div className={styles.errorContainer}>
+          <ErrorBlock
+            status="default"
+            title="加载失败"
+            description={errorMessage || '没有可打印的数据'}
+          />
+          <Button 
+            color="primary" 
+            onClick={() => navigate('/home')}
+            className={styles.backButton}
+          >
             返回首页
           </Button>
         </div>

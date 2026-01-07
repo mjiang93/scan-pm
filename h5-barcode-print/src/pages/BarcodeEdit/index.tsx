@@ -7,6 +7,36 @@ import { getBarcodeDetail, updateBarcode } from '@/services/barcode'
 import { useUserStore } from '@/stores'
 import styles from './index.module.less'
 
+// 格式化时间戳为 YYYY-MM-DD
+const formatTimestampToDate = (timestamp: string | number | null | undefined): string => {
+  if (!timestamp) return ''
+  try {
+    const d = new Date(parseInt(String(timestamp)))
+    if (isNaN(d.getTime())) return ''
+    
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    
+    return `${year}-${month}-${day}`
+  } catch (error) {
+    console.error('日期格式化错误:', error)
+    return ''
+  }
+}
+
+// 解析 YYYY-MM-DD 格式为 Date 对象
+const parseDateString = (dateStr: string | null | undefined): Date | null => {
+  if (!dateStr) return null
+  try {
+    const [year, month, day] = dateStr.split('-').map(Number)
+    return new Date(year, month - 1, day)
+  } catch (error) {
+    console.error('日期解析错误:', error)
+    return null
+  }
+}
+
 const BarcodeEdit = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -14,8 +44,13 @@ const BarcodeEdit = () => {
   const { userInfo } = useUserStore()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [originalData, setOriginalData] = useState<any>(null)
+  const [originalData, setOriginalData] = useState<Record<string, unknown> | null>(null)
   const [form] = Form.useForm()
+  
+  // 日期选择器的可见状态
+  const [productionStartVisible, setProductionStartVisible] = useState(false)
+  const [productionEndVisible, setProductionEndVisible] = useState(false)
+  const [deliveryDateVisible, setDeliveryDateVisible] = useState(false)
 
   useEffect(() => {
     if (!id) {
@@ -35,25 +70,27 @@ const BarcodeEdit = () => {
         // 保存原始数据用于提交
         setOriginalData(data)
         
-        // 设置表单初始值 - 直接使用接口返回的字段名
+        // 设置表单初始值 - 日期直接转换为 YYYY-MM-DD 格式字符串
         form.setFieldsValue({
-          projectCode: data.projectCode || '',
           productCode: data.productCode || '',
-          productionDateStart: data.productionDateStart ? new Date(parseInt(data.productionDateStart)) : null,
-          productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)) : null,
-          lineName: data.lineName || '',
-          technicalVersion: data.technicalVersion || '',
-          model: data.model || '', // 使用 model 字段
+          productName: data.productName || '',
+          projectCode: data.projectCode || '',
+          orderCode: data.orderCode || '',
+          supplierCode: data.supplierCode || '',
+          model: data.model || '',
+          materialCode: data.materialCode || '',
+          pohh: data.pohh || '',
+          productionDateStart: formatTimestampToDate(data.productionDateStart),
+          productionDateEnd: formatTimestampToDate(data.productionDateEnd),
+          nameModel: data.nameModel || '',
           cnt: data.cnt || '',
           unit: data.unit || '',
-          supplierCode: data.supplierCode || '',
           factoryCode: data.factoryCode || '',
           codeSn: data.codeSn || '',
           code09: data.code09 || '',
-          materialCode: data.materialCode || '',
+          deliveryDate: formatTimestampToDate(data.deliveryDate),
           drawingVersion: data.drawingVersion || '',
-          accessoryCnt: data.accessoryCnt || '',
-          deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)) : null
+          accessoryCnt: data.accessoryCnt || ''
         })
       } catch (error) {
         console.error('加载条码详情失败:', error)
@@ -76,34 +113,47 @@ const BarcodeEdit = () => {
       setSaving(true)
       const values = await form.validateFields()
       
+      // 将日期字符串转换为时间戳字符串
+      const productionStartTimestamp = values.productionDateStart 
+        ? String(parseDateString(values.productionDateStart)?.getTime() || '')
+        : ''
+      const productionEndTimestamp = values.productionDateEnd 
+        ? String(parseDateString(values.productionDateEnd)?.getTime() || '')
+        : ''
+      const deliveryDateTimestamp = values.deliveryDate 
+        ? String(parseDateString(values.deliveryDate)?.getTime() || '')
+        : ''
+      
       // 只传递接口需要的字段
       const updateData = {
         id: parseInt(id),
+        productCode: values.productCode,
+        productName: values.productName || '',
         projectCode: values.projectCode,
+        orderCode: values.orderCode,
         supplierCode: values.supplierCode,
-        productionDateStart: values.productionDateStart ? values.productionDateStart.toISOString().split('T')[0] : '',
-        productionDateEnd: values.productionDateEnd ? values.productionDateEnd.toISOString().split('T')[0] : '',
-        lineName: values.lineName,
-        technicalVersion: values.technicalVersion,
-        nameModel: values.model, // 接口字段是 nameModel
+        model: values.model || '',
+        materialCode: values.materialCode,
+        pohh: values.pohh || '',
+        productionDateStart: productionStartTimestamp,
+        productionDateEnd: productionEndTimestamp,
+        nameModel: values.nameModel,
         cnt: parseFloat(values.cnt) || 0,
         unit: values.unit,
-        materialCode: values.materialCode,
-        factoryCode: values.factoryCode,
-        codeSn: values.codeSn,
-        code09: values.code09,
-        drawingVersion: values.drawingVersion,
+        factoryCode: values.factoryCode || '',
+        codeSn: values.codeSn || '',
+        code09: values.code09 || '',
+        deliveryDate: deliveryDateTimestamp,
+        drawingVersion: values.drawingVersion || '',
         accessoryCnt: parseInt(values.accessoryCnt) || 0,
-        deliveryDate: values.deliveryDate ? values.deliveryDate.toISOString().split('T')[0] : '',
-        printStatus: originalData.printStatus || 0,
-        btPrintCnt: originalData.btPrintCnt || 0,
-        nbzPrintCnt: originalData.nbzPrintCnt || 0,
-        wbzPrintCnt: originalData.wbzPrintCnt || 0,
+        printStatus: (originalData?.printStatus as number) || 0,
+        btPrintCnt: (originalData?.btPrintCnt as number) || 0,
+        nbzPrintCnt: (originalData?.nbzPrintCnt as number) || 0,
+        wbzPrintCnt: (originalData?.wbzPrintCnt as number) || 0,
         operator: userInfo?.userName || 'unknown'
       }
       
       console.log('保存数据:', updateData)
-      console.log('当前用户:', userInfo)
       
       await updateBarcode(updateData)
       
@@ -137,8 +187,42 @@ const BarcodeEdit = () => {
         <Form
           form={form}
           layout="horizontal"
+          mode="card"
           className={styles.form}
+          footer={
+            <Button
+              block
+              type="submit"
+              color="primary"
+              size="large"
+              onClick={handleSave}
+              loading={saving}
+              disabled={saving}
+            >
+              保存
+            </Button>
+          }
         >
+          <Form.Header>基本信息</Form.Header>
+          
+          {/* 产品编码 - 必填，禁用 */}
+          <Form.Item
+            name="productCode"
+            label="产品编码"
+            rules={[{ required: true, message: '请输入产品编码' }]}
+          >
+            <Input placeholder="请输入产品编码" readOnly disabled />
+          </Form.Item>
+
+          {/* 产品名称 - 非必填 */}
+          <Form.Item
+            name="productName"
+            label="产品名称"
+          >
+            <Input placeholder="请输入产品名称" />
+          </Form.Item>
+
+          {/* 项目编码 - 必填 */}
           <Form.Item
             name="projectCode"
             label="项目编码"
@@ -147,66 +231,102 @@ const BarcodeEdit = () => {
             <Input placeholder="请输入项目编码" />
           </Form.Item>
 
+          {/* 单据编码 - 必填 */}
           <Form.Item
-            name="productCode"
-            label="产品编码"
-            rules={[{ required: true, message: '请输入产品编码' }]}
+            name="orderCode"
+            label="单据编码"
+            rules={[{ required: true, message: '请输入单据编码' }]}
           >
-            <Input placeholder="请输入产品编码" />
+            <Input placeholder="请输入单据编码" />
           </Form.Item>
 
-          <Form.Item label="生产日期" className={styles.dateRangeItem}>
-            <div className={styles.dateRange}>
-              <Form.Item name="productionDateStart" noStyle>
-                <DatePicker precision="day">
-                  {value => value ? value.toLocaleDateString('zh-CN') : '选择日期'}
-                </DatePicker>
-              </Form.Item>
-              <span className={styles.dateSeparator}>至</span>
-              <Form.Item name="productionDateEnd" noStyle>
-                <DatePicker precision="day">
-                  {value => value ? value.toLocaleDateString('zh-CN') : '选择日期'}
-                </DatePicker>
-              </Form.Item>
-            </div>
+          {/* 供应商代码 - 必填 */}
+          <Form.Item
+            name="supplierCode"
+            label="供应商代码"
+            rules={[{ required: true, message: '请输入供应商代码' }]}
+          >
+            <Input placeholder="请输入供应商代码" />
           </Form.Item>
 
-          <Form.Item label="生产线" className={styles.inlineGroup}>
-            <div className={styles.inlineFields}>
-              <Form.Item name="lineName" noStyle>
-                <Input placeholder="生产线" className={styles.halfInput} />
-              </Form.Item>
-              <Form.Item name="technicalVersion" label="技术版本" noStyle>
-                <Input placeholder="技术版本" className={styles.halfInput} />
-              </Form.Item>
-            </div>
-          </Form.Item>
-
+          {/* 柜号 - 非必填 */}
           <Form.Item
             name="model"
+            label="柜号"
+          >
+            <Input placeholder="本体model" />
+          </Form.Item>
+
+          {/* 客户物料编码 - 必填 */}
+          <Form.Item
+            name="materialCode"
+            label="客户物料编码"
+            rules={[{ required: true, message: '请输入客户物料编码' }]}
+          >
+            <Input placeholder="PartNumber" />
+          </Form.Item>
+
+          {/* po行号 - 非必填 */}
+          <Form.Item
+            name="pohh"
+            label="po行号"
+          >
+            <Input placeholder="请输入po行号" />
+          </Form.Item>
+
+          {/* 生产开始日期 - 必填 */}
+          <Form.Item
+            name="productionDateStart"
+            label="生产开始日期"
+            rules={[{ required: true, message: '请选择生产开始日期' }]}
+            onClick={() => setProductionStartVisible(true)}
+          >
+            <Input
+              placeholder="请选择生产开始日期"
+              readOnly
+            />
+          </Form.Item>
+
+          {/* 生产结束日期 - 非必填 */}
+          <Form.Item
+            name="productionDateEnd"
+            label="生产结束日期"
+            onClick={() => setProductionEndVisible(true)}
+          >
+            <Input
+              placeholder="请选择生产结束日期"
+              readOnly
+            />
+          </Form.Item>
+
+          {/* 名称型号 - 必填 */}
+          <Form.Item
+            name="nameModel"
             label="名称型号"
+            rules={[{ required: true, message: '请输入名称型号' }]}
           >
             <Input placeholder="请输入名称型号" />
           </Form.Item>
 
-          <Form.Item label="数量" className={styles.inlineGroup}>
-            <div className={styles.inlineFields}>
-              <Form.Item name="cnt" noStyle>
-                <Input placeholder="数量" type="number" className={styles.halfInput} />
-              </Form.Item>
-              <Form.Item name="unit" label="单位" noStyle>
-                <Input placeholder="单位" className={styles.halfInput} />
-              </Form.Item>
-            </div>
-          </Form.Item>
-
+          {/* 数量 - 必填 */}
           <Form.Item
-            name="supplierCode"
-            label="供货商代码"
+            name="cnt"
+            label="数量"
+            rules={[{ required: true, message: '请输入数量' }]}
           >
-            <Input placeholder="请输入供货商代码" />
+            <Input placeholder="请输入数量" type="number" />
           </Form.Item>
 
+          {/* 单位 - 必填 */}
+          <Form.Item
+            name="unit"
+            label="单位"
+            rules={[{ required: true, message: '请输入单位' }]}
+          >
+            <Input placeholder="请输入单位" />
+          </Form.Item>
+
+          {/* 出厂码 - 非必填 */}
           <Form.Item
             name="factoryCode"
             label="出厂码"
@@ -214,6 +334,7 @@ const BarcodeEdit = () => {
             <Input placeholder="请输入出厂码" />
           </Form.Item>
 
+          {/* SN码 - 非必填 */}
           <Form.Item
             name="codeSn"
             label="SN码"
@@ -221,6 +342,7 @@ const BarcodeEdit = () => {
             <Input placeholder="请输入SN码" />
           </Form.Item>
 
+          {/* 09码 - 非必填 */}
           <Form.Item
             name="code09"
             label="09码"
@@ -228,47 +350,93 @@ const BarcodeEdit = () => {
             <Input placeholder="请输入09码" />
           </Form.Item>
 
-          <Form.Item
-            name="materialCode"
-            label="物料编码"
-          >
-            <Input placeholder="请输入物料编码" />
-          </Form.Item>
-
-          <Form.Item label="图纸版本" className={styles.inlineGroup}>
-            <div className={styles.inlineFields}>
-              <Form.Item name="drawingVersion" noStyle>
-                <Input placeholder="图纸版本" className={styles.halfInput} />
-              </Form.Item>
-              <Form.Item name="accessoryCnt" label="附件" noStyle>
-                <Input placeholder="附件数量" type="number" className={styles.halfInput} />
-              </Form.Item>
-            </div>
-          </Form.Item>
-
+          {/* 送货日期 - 非必填 */}
           <Form.Item
             name="deliveryDate"
             label="送货日期"
+            onClick={() => setDeliveryDateVisible(true)}
           >
-            <DatePicker precision="day">
-              {value => value ? value.toLocaleDateString('zh-CN') : '选择送货日期'}
-            </DatePicker>
+            <Input
+              placeholder="请选择送货日期"
+              readOnly
+            />
+          </Form.Item>
+
+          {/* 图纸版本 - 非必填，限制3位字符 */}
+          <Form.Item
+            name="drawingVersion"
+            label="图纸版本"
+            rules={[{ len: 3, message: '图纸版本必须是3位字符' }]}
+          >
+            <Input placeholder="请输入3位字符" maxLength={3} />
+          </Form.Item>
+
+          {/* 附件数量 - 非必填 */}
+          <Form.Item
+            name="accessoryCnt"
+            label="附件"
+          >
+            <Input placeholder="请输入附件数量（个）" type="number" />
           </Form.Item>
         </Form>
-
-        <div className={styles.footer}>
-          <Button
-            block
-            color="primary"
-            size="large"
-            onClick={handleSave}
-            loading={saving}
-            disabled={saving}
-          >
-            保存
-          </Button>
-        </div>
       </div>
+
+      {/* 生产开始日期选择器 */}
+      <DatePicker
+        visible={productionStartVisible}
+        onClose={() => setProductionStartVisible(false)}
+        precision="day"
+        value={parseDateString(form.getFieldValue('productionDateStart'))}
+        onConfirm={(value) => {
+          form.setFieldValue('productionDateStart', formatTimestampToDate(value.getTime()))
+          setProductionStartVisible(false)
+        }}
+        title="选择生产开始日期"
+        renderLabel={(type, data) => {
+          if (type === 'year') return data + '年'
+          if (type === 'month') return data + '月'
+          if (type === 'day') return data + '日'
+          return data
+        }}
+      />
+
+      {/* 生产结束日期选择器 */}
+      <DatePicker
+        visible={productionEndVisible}
+        onClose={() => setProductionEndVisible(false)}
+        precision="day"
+        value={parseDateString(form.getFieldValue('productionDateEnd'))}
+        onConfirm={(value) => {
+          form.setFieldValue('productionDateEnd', formatTimestampToDate(value.getTime()))
+          setProductionEndVisible(false)
+        }}
+        title="选择生产结束日期"
+        renderLabel={(type, data) => {
+          if (type === 'year') return data + '年'
+          if (type === 'month') return data + '月'
+          if (type === 'day') return data + '日'
+          return data
+        }}
+      />
+
+      {/* 送货日期选择器 */}
+      <DatePicker
+        visible={deliveryDateVisible}
+        onClose={() => setDeliveryDateVisible(false)}
+        precision="day"
+        value={parseDateString(form.getFieldValue('deliveryDate'))}
+        onConfirm={(value) => {
+          form.setFieldValue('deliveryDate', formatTimestampToDate(value.getTime()))
+          setDeliveryDateVisible(false)
+        }}
+        title="选择送货日期"
+        renderLabel={(type, data) => {
+          if (type === 'year') return data + '年'
+          if (type === 'month') return data + '月'
+          if (type === 'day') return data + '日'
+          return data
+        }}
+      />
     </PageContainer>
   )
 }

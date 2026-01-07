@@ -1,7 +1,7 @@
 // 打印本体码页面
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Button, Toast } from 'antd-mobile'
+import { Button, Toast, ErrorBlock } from 'antd-mobile'
 import { PageContainer, QRCode, Barcode, Loading } from '@/components'
 import { getBarcodeDetail, updatePrintStatus, getBtPrintInfo } from '@/services/barcode'
 import { useUserStore } from '@/stores'
@@ -24,11 +24,13 @@ const PrintBody = () => {
   const id = searchParams.get('id') || ''
   const [printData, setPrintData] = useState<PrintData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string>('')
   const printRef = useRef<HTMLDivElement>(null)
   const { userInfo } = useUserStore()
 
   const loadPrintData = async () => {
     setLoading(true)
+    setErrorMessage('')
     try {
       // 先调用详情接口获取条码信息
       await getBarcodeDetail(id)
@@ -53,11 +55,13 @@ const PrintBody = () => {
         }
         setPrintData(mappedData)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('加载打印数据失败:', error)
+      const errMsg = error?.message || error?.msg || '加载打印数据失败'
+      setErrorMessage(errMsg)
       Toast.show({
         icon: 'fail',
-        content: '加载打印数据失败'
+        content: errMsg
       })
     } finally {
       setLoading(false)
@@ -111,9 +115,17 @@ const PrintBody = () => {
   if (!printData) {
     return (
       <PageContainer title="打印本体码">
-        <div className={styles.error}>
-          <p>没有可打印的数据</p>
-          <Button color="primary" onClick={() => navigate('/home')}>
+        <div className={styles.errorContainer}>
+          <ErrorBlock
+            status="default"
+            title="加载失败"
+            description={errorMessage || '没有可打印的数据'}
+          />
+          <Button 
+            color="primary" 
+            onClick={() => navigate('/home')}
+            className={styles.backButton}
+          >
             返回首页
           </Button>
         </div>

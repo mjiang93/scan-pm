@@ -1,32 +1,34 @@
 // 条码详情页面
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Button, Card, Toast, Picker, DatePicker, Dialog, Input } from 'antd-mobile'
+import { Button, Card, Toast, Picker, DatePicker, Dialog, Input, Form } from 'antd-mobile'
 import type { PickerValue } from 'antd-mobile/es/components/picker'
 import { PageContainer, Loading, Empty } from '@/components'
-import { getBarcodeDetail, editAccessory, editDelivery, editDrawingVersion, bindFactoryCode, scanBtcode, scanNbzcode } from '@/services/barcode'
+import { getBarcodeDetail, editAccessory, editDelivery, editDrawingVersion, bindFactoryCode, scanBtcode, scanNbzcode, createCode } from '@/services/barcode'
 import { useUserStore } from '@/stores'
 import styles from './index.module.less'
 
 interface BarcodeDetail {
   id?: string
-  projectCode: string
   productCode: string
+  productName: string
+  projectCode: string
+  orderCode: string
+  supplierCode: string
+  model: string
+  materialCode: string
+  pohh: string
   productionDate: string
   productionDateEnd: string
-  productionLine: string
-  techVersion: string
-  nameType: string
+  nameModel: string
   quantity: number
   unit: string
-  supplierCode: string
   factoryCode: string
   snCode: string
   code09: string
-  materialCode: string
+  deliveryDate: string
   drawingVersion: string
   attachments: number
-  deliveryDate: string
 }
 
 interface InnerPackageInfo {
@@ -69,7 +71,7 @@ const BarcodeDetail = () => {
   const [attachmentPickerVisible, setAttachmentPickerVisible] = useState(false)
   const [deliveryDatePickerVisible, setDeliveryDatePickerVisible] = useState(false)
   const [drawingVersionDialogVisible, setDrawingVersionDialogVisible] = useState(false)
-  const [drawingVersionInput, setDrawingVersionInput] = useState('')
+  const [form] = Form.useForm()
   const { userInfo } = useUserStore()
   const isRequestingRef = useRef(false)
 
@@ -143,23 +145,25 @@ const BarcodeDetail = () => {
         // 映射API返回的数据到组件需要的格式
         const mappedDetail: BarcodeDetail = {
           id: data.id,
+          productCode: data.productCode || '',
+          productName: data.productName || '',
           projectCode: data.projectCode || '',
-          productCode: data.productCode || '', // 修正：使用 productCode 而不是 materialCode
+          orderCode: data.orderCode || '',
+          supplierCode: data.supplierCode || '',
+          model: data.model || '',
+          materialCode: data.materialCode || '',
+          pohh: data.pohh || '',
           productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
           productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
-          productionLine: data.lineName || '',
-          techVersion: data.technicalVersion || '',
-          nameType: data.nameModel || data.model || '', // 修正：nameModel 为空时使用 model
+          nameModel: data.nameModel || '',
           quantity: data.cnt ? parseFloat(data.cnt) : 0,
           unit: data.unit || '',
-          supplierCode: data.supplierCode || '',
           factoryCode: data.factoryCode || '',
           snCode: data.codeSn || '',
           code09: data.code09 || '',
-          materialCode: data.materialCode || '',
+          deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : '',
           drawingVersion: data.drawingVersion || '',
-          attachments: data.accessoryCnt || 0,
-          deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : ''
+          attachments: data.accessoryCnt || 0
         }
         setDetail(mappedDetail)
       } catch (error: unknown) {
@@ -208,23 +212,25 @@ const BarcodeDetail = () => {
         
         const mappedDetail: BarcodeDetail = {
           id: data.id,
-          projectCode: data.projectCode || '',
           productCode: data.productCode || '',
+          productName: data.productName || '',
+          projectCode: data.projectCode || '',
+          orderCode: data.orderCode || '',
+          supplierCode: data.supplierCode || '',
+          model: data.model || '',
+          materialCode: data.materialCode || '',
+          pohh: data.pohh || '',
           productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
           productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
-          productionLine: data.lineName || '',
-          techVersion: data.technicalVersion || '',
-          nameType: data.nameModel || data.model || '',
+          nameModel: data.nameModel || '',
           quantity: data.cnt ? parseFloat(data.cnt) : 0,
           unit: data.unit || '',
-          supplierCode: data.supplierCode || '',
           factoryCode: data.factoryCode || '',
           snCode: data.codeSn || '',
           code09: data.code09 || '',
-          materialCode: data.materialCode || '',
+          deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : '',
           drawingVersion: data.drawingVersion || '',
-          attachments: data.accessoryCnt || 0,
-          deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : ''
+          attachments: data.accessoryCnt || 0
         }
         setDetail(mappedDetail)
         
@@ -305,23 +311,25 @@ const BarcodeDetail = () => {
       const data = await getBarcodeDetail(barcodeId)
       const mappedDetail: BarcodeDetail = {
         id: data.id,
-        projectCode: data.projectCode || '',
         productCode: data.productCode || '',
+        productName: data.productName || '',
+        projectCode: data.projectCode || '',
+        orderCode: data.orderCode || '',
+        supplierCode: data.supplierCode || '',
+        model: data.model || '',
+        materialCode: data.materialCode || '',
+        pohh: data.pohh || '',
         productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
         productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
-        productionLine: data.lineName || '',
-        techVersion: data.technicalVersion || '',
-        nameType: data.nameModel || data.model || '',
+        nameModel: data.nameModel || '',
         quantity: data.cnt ? parseFloat(data.cnt) : 0,
         unit: data.unit || '',
-        supplierCode: data.supplierCode || '',
         factoryCode: data.factoryCode || '',
         snCode: data.codeSn || '',
         code09: data.code09 || '',
-        materialCode: data.materialCode || '',
+        deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : '',
         drawingVersion: data.drawingVersion || '',
-        attachments: data.accessoryCnt || 0,
-        deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : ''
+        attachments: data.accessoryCnt || 0
       }
       setDetail(mappedDetail)
     } catch (error) {
@@ -334,34 +342,33 @@ const BarcodeDetail = () => {
   }
 
   const handleAddPaperVersion = () => {
-    setDrawingVersionInput(detail?.drawingVersion || '')
+    const currentVersion = detail?.drawingVersion || ''
+    form.setFieldsValue({ drawingVersion: currentVersion })
     setDrawingVersionDialogVisible(true)
   }
 
   const handleDrawingVersionConfirm = async () => {
-    if (!drawingVersionInput.trim()) {
-      Toast.show({
-        icon: 'fail',
-        content: '请输入图纸版本'
-      })
-      return
-    }
-
-    // 使用 detail.id 或 URL 参数中的 id
-    const barcodeId = detail?.id || id
-    
-    if (!barcodeId) {
-      Toast.show({
-        icon: 'fail',
-        content: '条码ID不存在，无法修改图纸版本'
-      })
-      return
-    }
-
     try {
+      // 先进行表单验证
+      await form.validateFields()
+      
+      const values = form.getFieldsValue()
+      const version = values.drawingVersion?.trim()
+
+      // 使用 detail.id 或 URL 参数中的 id
+      const barcodeId = detail?.id || id
+      
+      if (!barcodeId) {
+        Toast.show({
+          icon: 'fail',
+          content: '条码ID不存在，无法修改图纸版本'
+        })
+        return
+      }
+
       await editDrawingVersion({
         id: barcodeId,
-        drawingVersion: drawingVersionInput,
+        drawingVersion: version,
         operator: userInfo?.userName || 'unknown'
       })
       
@@ -371,31 +378,38 @@ const BarcodeDetail = () => {
       })
       
       setDrawingVersionDialogVisible(false)
+      form.resetFields()
       
       // 重新加载详情
       const data = await getBarcodeDetail(barcodeId)
       const mappedDetail: BarcodeDetail = {
         id: data.id,
-        projectCode: data.projectCode || '',
         productCode: data.productCode || '',
+        productName: data.productName || '',
+        projectCode: data.projectCode || '',
+        orderCode: data.orderCode || '',
+        supplierCode: data.supplierCode || '',
+        model: data.model || '',
+        materialCode: data.materialCode || '',
+        pohh: data.pohh || '',
         productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
         productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
-        productionLine: data.lineName || '',
-        techVersion: data.technicalVersion || '',
-        nameType: data.nameModel || data.model || '',
+        nameModel: data.nameModel || '',
         quantity: data.cnt ? parseFloat(data.cnt) : 0,
         unit: data.unit || '',
-        supplierCode: data.supplierCode || '',
         factoryCode: data.factoryCode || '',
         snCode: data.codeSn || '',
         code09: data.code09 || '',
-        materialCode: data.materialCode || '',
+        deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : '',
         drawingVersion: data.drawingVersion || '',
-        attachments: data.accessoryCnt || 0,
-        deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : ''
+        attachments: data.accessoryCnt || 0
       }
       setDetail(mappedDetail)
-    } catch (error) {
+    } catch (error: unknown) {
+      // 如果是表单验证错误，不显示toast，让表单自己显示错误信息
+      if (error && typeof error === 'object' && 'errorFields' in error) {
+        return
+      }
       console.error('修改图纸版本失败:', error)
       Toast.show({
         icon: 'fail',
@@ -404,8 +418,9 @@ const BarcodeDetail = () => {
     }
   }
 
-  const handleEditDeliveryDate = () => {
-    setDeliveryDatePickerVisible(true)
+  const handleDrawingVersionCancel = () => {
+    setDrawingVersionDialogVisible(false)
+    form.resetFields()
   }
 
   const handleDeliveryDateConfirm = async (value: Date) => {
@@ -439,23 +454,25 @@ const BarcodeDetail = () => {
       const data = await getBarcodeDetail(barcodeId)
       const mappedDetail: BarcodeDetail = {
         id: data.id,
-        projectCode: data.projectCode || '',
         productCode: data.productCode || '',
+        productName: data.productName || '',
+        projectCode: data.projectCode || '',
+        orderCode: data.orderCode || '',
+        supplierCode: data.supplierCode || '',
+        model: data.model || '',
+        materialCode: data.materialCode || '',
+        pohh: data.pohh || '',
         productionDate: data.productionDateStart ? new Date(parseInt(data.productionDateStart)).toLocaleDateString('zh-CN') : '',
         productionDateEnd: data.productionDateEnd ? new Date(parseInt(data.productionDateEnd)).toLocaleDateString('zh-CN') : '',
-        productionLine: data.lineName || '',
-        techVersion: data.technicalVersion || '',
-        nameType: data.nameModel || data.model || '',
+        nameModel: data.nameModel || '',
         quantity: data.cnt ? parseFloat(data.cnt) : 0,
         unit: data.unit || '',
-        supplierCode: data.supplierCode || '',
         factoryCode: data.factoryCode || '',
         snCode: data.codeSn || '',
         code09: data.code09 || '',
-        materialCode: data.materialCode || '',
+        deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : '',
         drawingVersion: data.drawingVersion || '',
-        attachments: data.accessoryCnt || 0,
-        deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : ''
+        attachments: data.accessoryCnt || 0
       }
       setDetail(mappedDetail)
     } catch (error) {
@@ -472,7 +489,7 @@ const BarcodeDetail = () => {
     navigate(`/barcode-edit?id=${barcodeId}`)
   }
 
-  const handlePrintBody = () => {
+  const handlePrintBody = async () => {
     const barcodeId = detail?.id || id
     
     // 验证必填字段：图纸版本、附件、出厂码
@@ -500,8 +517,37 @@ const BarcodeDetail = () => {
       return
     }
     
-    // 跳转到打印本体码页面，传递当前条码ID
-    navigate(`/print-body?id=${encodeURIComponent(barcodeId)}&from=detail`)
+    try {
+      // 显示加载提示
+      Toast.show({
+        icon: 'loading',
+        content: '正在生成码...',
+        duration: 0
+      })
+      
+      // 1. 先调用生成码接口
+      await createCode({
+        id: barcodeId,
+        operator: userInfo?.userName || 'unknown'
+      })
+      
+      // 2. 调用详情接口获取最新数据（确保数据已更新）
+      await getBarcodeDetail(barcodeId)
+      
+      Toast.clear()
+      
+      // 3. 跳转到打印本体码页面，传递当前条码ID
+      navigate(`/print-body?id=${encodeURIComponent(barcodeId)}&from=detail`)
+    } catch (error) {
+      Toast.clear()
+      console.error('生成码失败:', error)
+      const err = error as { response?: { data?: { msg?: string } }; message?: string }
+      const errorMsg = err?.response?.data?.msg || err?.message || '生成码失败'
+      Toast.show({
+        icon: 'fail',
+        content: errorMsg
+      })
+    }
   }
 
   const handlePrintInner = () => {
@@ -795,30 +841,69 @@ const BarcodeDetail = () => {
           </div>
 
           <div className={styles.infoGrid}>
+            {/* 产品编码 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>产品编码：</span>
               <span className={styles.value}>{detail.productCode}</span>
             </div>
-            
+
+            {/* 产品名称 */}
+            <div className={styles.infoRow}>
+              <span className={styles.label}>产品名称：</span>
+              <span className={styles.value}>{detail.productName}</span>
+            </div>
+
+            {/* 项目编码 */}
+            <div className={styles.infoRow}>
+              <span className={styles.label}>项目编码：</span>
+              <span className={styles.value}>{detail.projectCode}</span>
+            </div>
+
+            {/* 单据编码 */}
+            <div className={styles.infoRow}>
+              <span className={styles.label}>单据编码：</span>
+              <span className={styles.value}>{detail.orderCode}</span>
+            </div>
+
+            {/* 供应商代码 */}
+            <div className={styles.infoRow}>
+              <span className={styles.label}>供应商代码：</span>
+              <span className={styles.value}>{detail.supplierCode}</span>
+            </div>
+
+            {/* 柜号 */}
+            <div className={styles.infoRow}>
+              <span className={styles.label}>柜号：</span>
+              <span className={styles.value}>{detail.model}</span>
+            </div>
+
+            {/* 客户物料编码 */}
+            <div className={styles.infoRow}>
+              <span className={styles.label}>客户物料编码：</span>
+              <span className={styles.value}>{detail.materialCode}</span>
+            </div>
+
+            {/* po行号 */}
+            <div className={styles.infoRow}>
+              <span className={styles.label}>po行号：</span>
+              <span className={styles.value}>{detail.pohh}</span>
+            </div>
+
+            {/* 生产日期 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>生产日期：</span>
               <span className={styles.value}>
-                {detail.productionDate} 至 {detail.productionDateEnd}
+                {detail.productionDate}{detail.productionDateEnd ? ` 至 ${detail.productionDateEnd}` : ''}
               </span>
             </div>
 
-            <div className={styles.infoRow}>
-              <span className={styles.label}>生产线：</span>
-              <span className={styles.value}>{detail.productionLine}</span>
-              <span className={styles.label}>技术版本：</span>
-              <span className={styles.value}>{detail.techVersion}</span>
-            </div>
-
+            {/* 名称型号 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>名称型号：</span>
-              <span className={styles.value}>{detail.nameType}</span>
+              <span className={styles.value}>{detail.nameModel}</span>
             </div>
 
+            {/* 数量和单位 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>数量：</span>
               <span className={styles.value}>{detail.quantity}</span>
@@ -826,41 +911,40 @@ const BarcodeDetail = () => {
               <span className={styles.value}>{detail.unit}</span>
             </div>
 
-            <div className={styles.infoRow}>
-              <span className={styles.label}>供货商代码：</span>
-              <span className={styles.value}>{detail.supplierCode}</span>
-            </div>
-
+            {/* 出厂码 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>出厂码：</span>
               <span className={styles.value}>{detail.factoryCode}</span>
             </div>
 
+            {/* SN码 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>SN码：</span>
               <span className={styles.value}>{detail.snCode}</span>
             </div>
 
+            {/* 09码 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>09码：</span>
               <span className={styles.value}>{detail.code09}</span>
             </div>
 
+            {/* 送货日期 */}
             <div className={styles.infoRow}>
-              <span className={styles.label}>物料编码：</span>
-              <span className={styles.value}>{detail.materialCode}</span>
+              <span className={styles.label}>送货日期：</span>
+              <span className={styles.value}>{detail.deliveryDate}</span>
+            </div>
+
+            {/* 图纸版本 */}
+            <div className={styles.infoRow}>
               <span className={styles.label}>图纸版本：</span>
               <span className={styles.value}>{detail.drawingVersion}</span>
             </div>
 
+            {/* 附件 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>附件：</span>
               <span className={styles.value}>{detail.attachments} 个</span>
-            </div>
-
-            <div className={styles.infoRow}>
-              <span className={styles.label}>送货日期：</span>
-              <span className={styles.value}>{detail.deliveryDate}</span>
             </div>
           </div>
         </Card>
@@ -912,7 +996,7 @@ const BarcodeDetail = () => {
                 onClick={handlePrintBody}
                 className={styles.printBodyBtn}
               >
-                打印本体码
+                生成并打印本体码
               </Button>
             </div>
           )}
@@ -978,38 +1062,56 @@ const BarcodeDetail = () => {
         title="修改图纸版本"
         content={
           <div style={{ padding: '12px 0' }}>
-            <div style={{ marginBottom: '8px', color: '#666' }}>图纸版本（最多3位字符）</div>
-            <Input
-              placeholder="请输入图纸版本"
-              value={drawingVersionInput}
-              onChange={(val) => {
-                // 限制只能输入3位字符
-                if (val.length <= 3) {
-                  setDrawingVersionInput(val)
-                }
-              }}
-              maxLength={3}
-              style={{ 
-                '--font-size': '16px',
-                '--text-align': 'left'
-              }}
-            />
+            <Form
+              form={form}
+              layout="vertical"
+              footer={null}
+            >
+              <Form.Item
+                name="drawingVersion"
+                label="图纸版本"
+                rules={[
+                  { 
+                    validator: (_, value) => {
+                      if (!value || value.trim().length === 0) {
+                        return Promise.reject(new Error('请输入图纸版本'))
+                      }
+                      if (value.trim().length !== 3) {
+                        return Promise.reject(new Error('图纸版本必须是3位字符'))
+                      }
+                      return Promise.resolve()
+                    }
+                  }
+                ]}
+              >
+                <Input
+                  placeholder="请输入3位图纸版本"
+                  maxLength={3}
+                  style={{ 
+                    '--font-size': '16px',
+                    '--text-align': 'left'
+                  }}
+                />
+              </Form.Item>
+            </Form>
           </div>
         }
-        closeOnAction
-        onClose={() => setDrawingVersionDialogVisible(false)}
+        closeOnAction={false}
+        onClose={handleDrawingVersionCancel}
         actions={[
-          {
-            key: 'cancel',
-            text: '取消',
-            onClick: () => setDrawingVersionDialogVisible(false)
-          },
-          {
-            key: 'confirm',
-            text: '确定',
-            bold: true,
-            onClick: handleDrawingVersionConfirm
-          }
+          [
+            {
+              key: 'cancel',
+              text: '取消',
+              onClick: handleDrawingVersionCancel
+            },
+            {
+              key: 'confirm',
+              text: '确定',
+              bold: true,
+              onClick: handleDrawingVersionConfirm
+            }
+          ]
         ]}
       />
     </PageContainer>

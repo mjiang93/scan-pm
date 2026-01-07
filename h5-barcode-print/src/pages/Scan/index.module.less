@@ -32,18 +32,144 @@
   }
 }
 
+// 扫码枪模式样式
+.scannerMode {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.scanIcon {
+  margin-bottom: 32px;
+  color: #1677ff;
+  animation: pulse 2s ease-in-out infinite;
+  
+  svg {
+    display: block;
+    filter: drop-shadow(0 4px 12px rgba(22, 119, 255, 0.15));
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+.scanTip {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.tipTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 12px;
+}
+
+.tipDesc {
+  font-size: 14px;
+  color: #8c8c8c;
+  line-height: 1.6;
+}
+
+.inputWrapper {
+  width: 100%;
+  max-width: 500px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+}
+
+.inputLabel {
+  font-size: 14px;
+  color: #595959;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
 .inputArea {
   display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: stretch;
   
   :global {
     .adm-input {
       flex: 1;
+      font-size: 16px;
+      
+      input {
+        font-size: 16px;
+        height: 48px;
+      }
     }
     
     .adm-button {
       flex-shrink: 0;
+      min-width: 88px;
+      height: 48px;
+      font-size: 16px;
+      font-weight: 500;
     }
   }
+}
+
+.scanInput {
+  :global {
+    .adm-input-element {
+      border: 2px solid #d9d9d9;
+      border-radius: 8px;
+      padding: 0 16px;
+      transition: all 0.3s;
+      
+      &:focus {
+        border-color: #1677ff;
+        box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+      }
+    }
+  }
+}
+
+.submitBtn {
+  border-radius: 8px !important;
+}
+
+.codePreview {
+  margin-top: 24px;
+  width: 100%;
+  max-width: 500px;
+  background: #f0f7ff;
+  border: 1px solid #91caff;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.previewLabel {
+  font-size: 14px;
+  color: #0958d9;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.previewCode {
+  font-size: 16px;
+  color: #0958d9;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  word-break: break-all;
+  flex: 1;
 }

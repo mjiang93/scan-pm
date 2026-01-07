@@ -71,6 +71,8 @@
 }
 
 .infoSection {
+  display: flex;
+  flex-direction: column;
   .infoItem {
     margin-bottom: 12px;
     font-size: 10px;
@@ -123,6 +125,7 @@
   min-width: 150px;
   align-items: flex-end;
   text-align: right;
+  justify-content: center;
 }
 
 .rightItem {
@@ -162,6 +165,20 @@
     color: #666;
     font-size: 16px;
     margin-bottom: 20px;
+  }
+}
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  min-height: 60vh;
+  
+  .backButton {
+    margin-top: 24px;
+    min-width: 200px;
   }
 }
 
@@ -252,10 +269,10 @@
       
       .infoValue {
         color: #000 !important;
-        display: inline !important;
-        word-wrap: break-word !important;
-        word-break: break-all !important;
-        overflow-wrap: break-word !important;
+        // display: inline !important;
+        // word-wrap: break-word !important;
+        // word-break: break-all !important;
+        // overflow-wrap: break-word !important;
       }
     }
     

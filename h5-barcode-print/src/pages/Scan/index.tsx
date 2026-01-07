@@ -1,9 +1,11 @@
 // 扫码页面
-import { useState, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
+// import { useCallback } from 'react' // 暂时注释扫码功能时不需要
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Input, Button, Toast } from 'antd-mobile'
+import type { InputRef } from 'antd-mobile/es/components/input'
 import { PageContainer } from '@/components'
-import Scanner from '@/components/Scanner'
+// import Scanner from '@/components/Scanner' // 暂时注释扫码功能
 import { scanProjectCode } from '@/services/barcode'
 import { useUserStore } from '@/stores'
 import { isEmpty } from '@/utils/validate'
@@ -17,39 +19,50 @@ const Scan = () => {
   const returnType = searchParams.get('returnType') || '' // 返回时需要带的type参数
   const { userInfo } = useUserStore()
   const [manualCode, setManualCode] = useState('')
-  const [permissionDenied, setPermissionDenied] = useState(false)
+  // const [permissionDenied, setPermissionDenied] = useState(false) // 暂时注释扫码功能
   const [loading, setLoading] = useState(false)
+  const inputRef = useRef<InputRef>(null)
 
-  const handleScan = useCallback((code: string) => {
-    Toast.show({ 
-      content: '扫描成功',
-      duration: 1500
-    })
-    
-    // 如果是MOM出厂码绑定，直接返回详情页面，使用 replace 清除扫码页面历史
-    if (type === 'mom' && id) {
-      const typeParam = returnType ? `&type=${encodeURIComponent(returnType)}` : ''
-      navigate(`/barcode-detail?id=${encodeURIComponent(id)}&factoryCode=${encodeURIComponent(code)}${typeParam}`, { replace: true })
-    } else if (type === 'inner') {
-      // 扫SN打印内包装，直接跳转到打印内包装码页面
-      navigate(`/print-inner?btcode=${encodeURIComponent(code)}`, { replace: true })
-    } else if (type === 'body') {
-      // 扫码生成SN码，调用接口获取ID后跳转
-      handleScanProjectCode(code)
-    } else if (type === 'label') {
-      // 扫内包生成外装，直接跳转到打印外包装标签页面
-      navigate(`/print-label?nbzcode=${encodeURIComponent(code)}`, { replace: true })
-    } else {
-      navigate(`/scan-result?code=${encodeURIComponent(code)}&type=${type}`, { replace: true })
-    }
-  }, [type, id, returnType, navigate])
-
-  const handleError = useCallback((error: string) => {
-    if (error.includes('Permission') || error.includes('NotAllowed')) {
-      setPermissionDenied(true)
-    }
-    Toast.show({ content: error })
+  // 页面加载时自动聚焦输入框
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      inputRef.current?.focus()
+    }, 300)
+    return () => clearTimeout(timer)
   }, [])
+
+  // 暂时注释扫码功能 - 开始
+  // const handleScan = useCallback((code: string) => {
+  //   Toast.show({ 
+  //     content: '扫描成功',
+  //     duration: 1500
+  //   })
+  //   
+  //   // 如果是MOM出厂码绑定，直接返回详情页面，使用 replace 清除扫码页面历史
+  //   if (type === 'mom' && id) {
+  //     const typeParam = returnType ? `&type=${encodeURIComponent(returnType)}` : ''
+  //     navigate(`/barcode-detail?id=${encodeURIComponent(id)}&factoryCode=${encodeURIComponent(code)}${typeParam}`, { replace: true })
+  //   } else if (type === 'inner') {
+  //     // 扫SN打印内包装，直接跳转到打印内包装码页面
+  //     navigate(`/print-inner?btcode=${encodeURIComponent(code)}`, { replace: true })
+  //   } else if (type === 'body') {
+  //     // 扫码生成SN码，调用接口获取ID后跳转
+  //     handleScanProjectCode(code)
+  //   } else if (type === 'label') {
+  //     // 扫内包生成外装，直接跳转到打印外包装标签页面
+  //     navigate(`/print-label?nbzcode=${encodeURIComponent(code)}`, { replace: true })
+  //   } else {
+  //     navigate(`/scan-result?code=${encodeURIComponent(code)}&type=${type}`, { replace: true })
+  //   }
+  // }, [type, id, returnType, navigate])
+
+  // const handleError = useCallback((error: string) => {
+  //   if (error.includes('Permission') || error.includes('NotAllowed')) {
+  //     setPermissionDenied(true)
+  //   }
+  //   Toast.show({ content: error })
+  // }, [])
+  // 暂时注释扫码功能 - 结束
 
   // 处理扫码生成SN码的逻辑
   const handleScanProjectCode = async (projectCode: string) => {
@@ -136,7 +149,8 @@ const Scan = () => {
   return (
     <PageContainer title={getTitle()}>
       <div className={styles.scan}>
-        {permissionDenied ? (
+        {/* 暂时注释扫码功能，后期再启用 */}
+        {/* {permissionDenied ? (
           <div className={styles.manual}>
             <div className={styles.permissionTip}>
               <p>📷 摄像头权限被拒绝</p>
@@ -185,7 +199,55 @@ const Scan = () => {
               </div>
             </div>
           </>
-        )}
+        )} */}
+        
+        {/* 扫码枪输入模式 */}
+        <div className={styles.scannerMode}>
+          <div className={styles.scanIcon}>
+            <svg viewBox="0 0 1024 1024" width="120" height="120">
+              <path d="M896 192H128c-35.3 0-64 28.7-64 64v512c0 35.3 28.7 64 64 64h768c35.3 0 64-28.7 64-64V256c0-35.3-28.7-64-64-64zM128 768V256h768v512H128z" fill="currentColor"/>
+              <path d="M192 320h64v384h-64zM320 320h32v384h-32zM416 320h64v384h-64zM544 320h32v384h-32zM640 320h32v384h-32zM736 320h64v384h-64z" fill="currentColor"/>
+            </svg>
+          </div>
+          
+          <div className={styles.scanTip}>
+            <div className={styles.tipTitle}>请使用扫码枪扫描条码</div>
+            <div className={styles.tipDesc}>扫码枪会自动将条码输入到下方输入框</div>
+          </div>
+
+          <div className={styles.inputWrapper}>
+            <div className={styles.inputLabel}>条码输入</div>
+            <div className={styles.inputArea}>
+              <Input
+                ref={inputRef}
+                placeholder="等待扫码枪输入..."
+                value={manualCode}
+                onChange={setManualCode}
+                clearable
+                disabled={loading}
+                className={styles.scanInput}
+                onEnterPress={handleManualSubmit}
+              />
+              <Button 
+                color="primary" 
+                onClick={handleManualSubmit}
+                disabled={isEmpty(manualCode) || loading}
+                loading={loading}
+                size="large"
+                className={styles.submitBtn}
+              >
+                {getButtonText()}
+              </Button>
+            </div>
+          </div>
+
+          {manualCode && (
+            <div className={styles.codePreview}>
+              <div className={styles.previewLabel}>当前条码：</div>
+              <div className={styles.previewCode}>{manualCode}</div>
+            </div>
+          )}
+        </div>
       </div>
     </PageContainer>
   )

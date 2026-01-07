@@ -226,6 +226,16 @@ export function scanNbzcode(nbzcode: string): Promise<{
 }
 
 /**
+ * 生成SN码和09码
+ */
+export function createCode(params: {
+  id: string
+  operator: string
+}): Promise<any> {
+  return request.post('/pc/createcode', null, { params })
+}
+
+/**
  * 本体码打印预览-生成条码-更新图纸版本后才能打印
  */
 export function getBtPrintInfo(params: {
