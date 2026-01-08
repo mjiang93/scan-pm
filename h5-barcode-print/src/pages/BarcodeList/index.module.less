@@ -13,27 +13,109 @@
 
 .searchRow {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 12px;
+  align-items: stretch;
   align-items: center;
+  
+  :global(.adm-dropdown) {
+    flex-shrink: 0;
+    background: #fff;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  
+  :global(.adm-dropdown-item) {
+    min-width: 100px;
+    padding: 6px 12px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    
+    :global(.adm-dropdown-item-title) {
+      font-size: 14px;
+      font-weight: normal;
+      color: #666;
+    }
+    
+    :global(.adm-dropdown-item-arrow) {
+      color: #999;
+      font-size: 12px;
+    }
+  }
+  
+  :global(.adm-dropdown-item-active) {
+    background: #fff;
+    border-color: #d9d9d9;
+  }
 }
 
-.searchBar {
+.searchInput {
   flex: 1;
+  border-radius: 6px;
+  box-sizing: border-box;
+  transition: all 0.3s;
+  
 }
 
-.statusButton {
-  flex-shrink: 0;
-  min-width: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.dropdownContent {
+  padding: 8px 0;
+}
+
+.dropdownItem {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #f5f5f5;
+  }
+  
+  &:active {
+    background-color: #e8e8e8;
+  }
+}
+
+.dropdownItemActive {
+  color: #1677ff;
+  background-color: #f0f8ff;
+  font-weight: 500;
 }
 
 .dateRow {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.dateButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #666;
+  
+  :global(.adm-button) {
+    height: 36px;
+    font-size: 14px;
+    color: #666;
+    font-weight: normal;
+    border: none;
+    background: transparent;
+  }
+  
+  :global(.antd-mobile-icon) {
+    color: #999;
+    font-size: 12px;
+  }
 }
 
 .dateSeparator {
@@ -84,9 +166,10 @@
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid #f0f0f0;
+  position: relative;
   
   :global(.adm-card-body) {
-    padding: 16px;
+    // padding: 16px;
   }
 }
 
@@ -141,13 +224,16 @@
 }
 
 .actionButton {
-  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
   
   :global(.adm-button) {
     min-width: 60px;
     height: 28px;
     font-size: 12px;
-    border-radius: 14px;
+    border-radius: 0 8px 0 8px;
   }
 }
 
@@ -168,7 +254,7 @@
     align-items: flex-start;
     
     &:first-child {
-      margin-right: 16px;
+      // margin-right: 16px;
     }
   }
   
@@ -199,27 +285,7 @@
   }
 }
 
-// 响应式适配
-@media (max-width: 375px) {
-  .searchRow {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .dateRow {
-    justify-content: space-between;
-  }
-  
-  .cardHeader {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-  
-  .actionButton {
-    align-self: flex-end;
-  }
-}
+
 
 // 状态选择弹窗样式
 .statusPopup {

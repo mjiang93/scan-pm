@@ -841,55 +841,42 @@ const BarcodeDetail = () => {
           </div>
 
           <div className={styles.infoGrid}>
-            {/* 产品编码 */}
+            {/* 产品编码和产品名称 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>产品编码：</span>
               <span className={styles.value}>{detail.productCode}</span>
             </div>
 
-            {/* 产品名称 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>产品名称：</span>
               <span className={styles.value}>{detail.productName}</span>
             </div>
 
-            {/* 项目编码 */}
-            <div className={styles.infoRow}>
-              <span className={styles.label}>项目编码：</span>
-              <span className={styles.value}>{detail.projectCode}</span>
-            </div>
-
-            {/* 单据编码 */}
+            {/* 单据编码和供应商代码 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>单据编码：</span>
               <span className={styles.value}>{detail.orderCode}</span>
             </div>
 
-            {/* 供应商代码 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>供应商代码：</span>
               <span className={styles.value}>{detail.supplierCode}</span>
             </div>
 
-            {/* 柜号 */}
+            {/* 客户物料编码和柜号 */}
             <div className={styles.infoRow}>
-              <span className={styles.label}>柜号：</span>
+               <span className={styles.label}>柜号：</span>
               <span className={styles.value}>{detail.model}</span>
+
             </div>
 
-            {/* 客户物料编码 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>客户物料编码：</span>
               <span className={styles.value}>{detail.materialCode}</span>
-            </div>
-
-            {/* po行号 */}
-            <div className={styles.infoRow}>
-              <span className={styles.label}>po行号：</span>
+              <span className={styles.label}>PO行号：</span>
               <span className={styles.value}>{detail.pohh}</span>
             </div>
-
-            {/* 生产日期 */}
+             {/* 生产日期 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>生产日期：</span>
               <span className={styles.value}>
@@ -911,41 +898,39 @@ const BarcodeDetail = () => {
               <span className={styles.value}>{detail.unit}</span>
             </div>
 
+           
+
+            
+
             {/* 出厂码 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>出厂码：</span>
               <span className={styles.value}>{detail.factoryCode}</span>
             </div>
 
-            {/* SN码 */}
+            {/* SN码和09码 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>SN码：</span>
               <span className={styles.value}>{detail.snCode}</span>
             </div>
 
-            {/* 09码 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>09码：</span>
               <span className={styles.value}>{detail.code09}</span>
             </div>
-
             {/* 送货日期 */}
             <div className={styles.infoRow}>
               <span className={styles.label}>送货日期：</span>
               <span className={styles.value}>{detail.deliveryDate}</span>
-            </div>
-
-            {/* 图纸版本 */}
-            <div className={styles.infoRow}>
               <span className={styles.label}>图纸版本：</span>
               <span className={styles.value}>{detail.drawingVersion}</span>
-            </div>
-
-            {/* 附件 */}
-            <div className={styles.infoRow}>
               <span className={styles.label}>附件：</span>
               <span className={styles.value}>{detail.attachments} 个</span>
+           
             </div>
+            {/* 图纸版本和附件 */}
+            {/* <div className={styles.infoRow}>
+               </div> */}
           </div>
         </Card>
 
@@ -1054,6 +1039,8 @@ const BarcodeDetail = () => {
         confirmText="确定"
         cancelText="取消"
         title="修改送货日期"
+        min={new Date(new Date().getFullYear() - 100, 0, 1)}
+        max={new Date(new Date().getFullYear() + 100, 11, 31)}
       />
 
       {/* 图纸版本输入对话框 */}

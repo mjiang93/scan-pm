@@ -143,7 +143,7 @@ const Scan = () => {
   }
 
   const getButtonText = () => {
-    return type === 'mom' ? '绑定' : '搜索'
+    return type === 'mom' ? '绑定' : '确认'
   }
 
   return (
@@ -236,17 +236,18 @@ const Scan = () => {
                 size="large"
                 className={styles.submitBtn}
               >
-                {getButtonText()}
+                {/* {getButtonText()} */}
+                确认
               </Button>
             </div>
           </div>
 
-          {manualCode && (
+          {/* {manualCode && (
             <div className={styles.codePreview}>
               <div className={styles.previewLabel}>当前条码：</div>
               <div className={styles.previewCode}>{manualCode}</div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </PageContainer>

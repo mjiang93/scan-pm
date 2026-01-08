@@ -2,18 +2,18 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
-  SearchBar, 
   Empty, 
   PullToRefresh, 
   Button,
   Card,
   Divider,
   Toast,
-  Popup,
-  List,
-  CalendarPicker,
-  InfiniteScroll
+  InfiniteScroll,
+  Picker,
+  SearchBar,
+  Dropdown
 } from 'antd-mobile'
+import type { DropdownRef } from 'antd-mobile'
 import { DownOutline } from 'antd-mobile-icons'
 import { PageContainer } from '@/components'
 import { getPdaBarcodeListPage } from '@/services/barcode'
@@ -25,9 +25,10 @@ interface BarcodeItem {
   ogCode: string
   productCode: string
   productName: string
-  serialNumber: string
-  pnCode: string
+  orderCode: string
+  factoryCode: string
   supplierCode: string
+  deliveryDate: string
   createTime: string
   status: 'unprinted' | 'printed' | 'reprinted'
   btPrintCnt: number
@@ -39,21 +40,22 @@ interface BarcodeItem {
 const BarcodeList = () => {
   const navigate = useNavigate()
   const [searchValue, setSearchValue] = useState('')
-  const [productCodeSearch, setProductCodeSearch] = useState('')
+  const [searchFieldType, setSearchFieldType] = useState<string>('codeSn') // 搜索字段类型
   const [barcodeList, setBarcodeList] = useState<BarcodeItem[]>([])
   const [activeTab, setActiveTab] = useState('SN码管理')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [statusPopupVisible, setStatusPopupVisible] = useState(false)
   const [dateRange, setDateRange] = useState<[Date, Date]>([
     new Date(new Date().setDate(new Date().getDate() - 30)), 
     new Date()
   ])
-  const [calendarVisible, setCalendarVisible] = useState(false)
+  const [startDatePickerVisible, setStartDatePickerVisible] = useState(false)
+  const [endDatePickerVisible, setEndDatePickerVisible] = useState(false)
+  const searchFieldDropdownRef = useRef<DropdownRef>(null)
+  const statusDropdownRef = useRef<DropdownRef>(null)
   const loadingRef = useRef(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const searchDebounceTimer = useRef<NodeJS.Timeout | null>(null)
-  const productCodeDebounceTimer = useRef<NodeJS.Timeout | null>(null)
 
   const tabOptions = [
     { label: 'SN码管理', value: 'SN码管理' },
@@ -68,15 +70,53 @@ const BarcodeList = () => {
     { label: '已打印', value: '2' }
   ]
 
+  // 搜索字段选项
+  const searchFieldOptions = [
+    { key: 'codeSn', title: 'SN码' },
+    { key: 'code09', title: '09码' },
+    { key: 'productCode', title: '产品编码' },
+    { key: 'projectCode', title: '项目编码' },
+    { key: 'factoryCode', title: '出厂码' },
+    { key: 'orderCode', title: '单据编码' }
+  ]
+
+  // 获取搜索字段标签
+  const getSearchFieldLabel = (value: string) => {
+    const option = searchFieldOptions.find(opt => opt.key === value)
+    return option?.title || 'SN码'
+  }
+
+  // 生成日期选择器的列数据
+  const generateDatePickerColumns = () => {
+    const currentYear = new Date().getFullYear()
+    // 上下100年范围
+    const years = Array.from({ length: 201 }, (_, i) => ({
+      label: `${currentYear - 100 + i}年`,
+      value: currentYear - 100 + i
+    }))
+    
+    const months = Array.from({ length: 12 }, (_, i) => ({
+      label: `${i + 1}月`,
+      value: i + 1
+    }))
+    
+    const days = Array.from({ length: 31 }, (_, i) => ({
+      label: `${i + 1}日`,
+      value: i + 1
+    }))
+    
+    return [years, months, days]
+  }
+
   const loadBarcodeList = useCallback(async (
     page: number = 1, 
     append: boolean = false,
     overrideFilters?: {
       searchValue?: string
-      productCodeSearch?: string
       activeTab?: string
       statusFilter?: string
       dateRange?: [Date, Date]
+      searchFieldType?: string
     }
   ) => {
     // 防止重复请求
@@ -88,10 +128,10 @@ const BarcodeList = () => {
       // 使用传入的过滤器或当前状态
       const filters = overrideFilters || {
         searchValue,
-        productCodeSearch,
         activeTab,
         statusFilter,
-        dateRange
+        dateRange,
+        searchFieldType
       }
       
       const [startDate, endDate] = filters.dateRange!
@@ -106,6 +146,9 @@ const BarcodeList = () => {
         code09?: string
         productCode?: string
         printStatus?: number
+        projectCode?: string
+        factoryCode?: string
+        orderCode?: string
       } = {
         page,
         size: 10,
@@ -113,18 +156,22 @@ const BarcodeList = () => {
         deliveryDateEnd: endDate.toISOString()
       }
       
-      // 根据当前标签页和搜索值添加查询条件
+      // 根据搜索字段类型添加查询条件
       if (filters.searchValue!.trim()) {
-        if (filters.activeTab === 'SN码管理') {
+        const fieldType = filters.searchFieldType || searchFieldType
+        if (fieldType === 'codeSn') {
           queryParams.codeSn = filters.searchValue!.trim()
-        } else if (filters.activeTab === '09码管理') {
+        } else if (fieldType === 'code09') {
           queryParams.code09 = filters.searchValue!.trim()
+        } else if (fieldType === 'productCode') {
+          queryParams.productCode = filters.searchValue!.trim()
+        } else if (fieldType === 'projectCode') {
+          queryParams.projectCode = filters.searchValue!.trim()
+        } else if (fieldType === 'factoryCode') {
+          queryParams.factoryCode = filters.searchValue!.trim()
+        } else if (fieldType === 'orderCode') {
+          queryParams.orderCode = filters.searchValue!.trim()
         }
-      }
-
-      // 添加产品编码筛选
-      if (filters.productCodeSearch!.trim()) {
-        queryParams.productCode = filters.productCodeSearch!.trim()
       }
       
       // 添加打印状态筛选
@@ -142,8 +189,10 @@ const BarcodeList = () => {
         materialCode?: string
         nameModel?: string
         productName?: string
-        projectCode?: string
+        orderCode?: string
+        factoryCode?: string
         supplierCode?: string
+        deliveryDate?: string
         createTime?: string
         printStatus?: number
         btPrintCnt?: number
@@ -155,9 +204,14 @@ const BarcodeList = () => {
         ogCode: item.code09 || '-',
         productCode: item.materialCode || '-',
         productName: item.nameModel || item.productName || '-',
-        serialNumber: item.codeSn || '-',
-        pnCode: item.projectCode || '-',
+        orderCode: item.orderCode || '-',
+        factoryCode: item.factoryCode || '-',
         supplierCode: item.supplierCode || '-',
+        deliveryDate: item.deliveryDate ? new Date(parseInt(item.deliveryDate)).toLocaleDateString('zh-CN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).replace(/\//g, '-') : '-',
         createTime: item.createTime ? new Date(parseInt(item.createTime)).toLocaleString('zh-CN', {
           year: 'numeric',
           month: '2-digit',
@@ -204,7 +258,7 @@ const BarcodeList = () => {
     } finally {
       loadingRef.current = false
     }
-  }, [dateRange, searchValue, productCodeSearch, activeTab, statusFilter])
+  }, [dateRange, searchValue, activeTab, statusFilter, searchFieldType])
 
   // 页面初始化时加载数据
   useEffect(() => {
@@ -236,31 +290,6 @@ const BarcodeList = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchValue])
-
-  // 监听产品编码搜索值变化，实现防抖搜索
-  useEffect(() => {
-    // 清除之前的定时器
-    if (productCodeDebounceTimer.current) {
-      clearTimeout(productCodeDebounceTimer.current)
-    }
-
-    // 设置新的定时器
-    productCodeDebounceTimer.current = setTimeout(() => {
-      // 重置分页并搜索
-      setBarcodeList([])
-      setCurrentPage(1)
-      setHasMore(true)
-      loadBarcodeList(1, false)
-    }, 500)
-
-    // 清理函数
-    return () => {
-      if (productCodeDebounceTimer.current) {
-        clearTimeout(productCodeDebounceTimer.current)
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productCodeSearch])
 
   // 加载更多数据
   const loadMore = async () => {
@@ -434,57 +463,81 @@ const BarcodeList = () => {
   //   navigate('/scan?type=barcode-search')
   // }
 
-  const handleStatusSelect = (newStatus: string) => {
-    setStatusFilter(newStatus)
-    setStatusPopupVisible(false)
-    setBarcodeList([])
-    setCurrentPage(1)
-    setHasMore(true)
-    // 立即使用新的状态值加载
-    loadBarcodeList(1, false, {
-      searchValue,
-      productCodeSearch,
-      activeTab,
-      statusFilter: newStatus,
-      dateRange
-    })
-  }
+
 
   const getStatusLabel = (value: string) => {
     const option = statusOptions.find(opt => opt.value === value)
     return option?.label || '全部状态'
   }
 
-  const handleDateRangeChange = (val: [Date, Date] | null) => {
-    if (val) {
-      setDateRange(val)
-    }
-  }
-
-  const handleDateRangeConfirm = (val: [Date, Date] | null) => {
-    if (val) {
-      setDateRange(val)
-      setCalendarVisible(false)
-      setBarcodeList([])
-      setCurrentPage(1)
-      setHasMore(true)
-      // 立即使用新的日期范围加载
-      loadBarcodeList(1, false, {
-        searchValue,
-        productCodeSearch,
-        activeTab,
-        statusFilter,
-        dateRange: val
-      })
-    }
-  }
-
-  const handleSearch = () => {
+  // 开始日期选择器确认
+  const handleStartDatePickerConfirm = (value: (string | number | null)[]) => {
+    const [year, month, day] = value as number[]
+    const newStartDate = new Date(year, month - 1, day)
+    const newDateRange: [Date, Date] = [newStartDate, dateRange[1]]
+    
+    setDateRange(newDateRange)
+    setStartDatePickerVisible(false)
     setBarcodeList([])
     setCurrentPage(1)
     setHasMore(true)
-    loadBarcodeList(1, false)
+    
+    // 立即使用新的日期范围加载
+    loadBarcodeList(1, false, {
+      searchValue,
+      activeTab,
+      statusFilter,
+      dateRange: newDateRange,
+      searchFieldType
+    })
   }
+
+  // 结束日期选择器确认
+  const handleEndDatePickerConfirm = (value: (string | number | null)[]) => {
+    const [year, month, day] = value as number[]
+    const newEndDate = new Date(year, month - 1, day)
+    const newDateRange: [Date, Date] = [dateRange[0], newEndDate]
+    
+    setDateRange(newDateRange)
+    setEndDatePickerVisible(false)
+    setBarcodeList([])
+    setCurrentPage(1)
+    setHasMore(true)
+    
+    // 立即使用新的日期范围加载
+    loadBarcodeList(1, false, {
+      searchValue,
+      activeTab,
+      statusFilter,
+      dateRange: newDateRange,
+      searchFieldType
+    })
+  }
+
+  // 保留原日历功能（可能以后会用）
+  // const handleDateRangeChange = (val: [Date, Date] | null) => {
+  //   if (val) {
+  //     setDateRange(val)
+  //   }
+  // }
+
+  // const handleDateRangeConfirm = (val: [Date, Date] | null) => {
+  //   if (val) {
+  //     setDateRange(val)
+  //     setCalendarVisible(false)
+  //     setBarcodeList([])
+  //     setCurrentPage(1)
+  //     setHasMore(true)
+  //     // 立即使用新的日期范围加载
+  //     loadBarcodeList(1, false, {
+  //       searchValue,
+  //       activeTab,
+  //       statusFilter,
+  //       dateRange: val,
+  //       searchFieldType
+  //     })
+  //   }
+  // }
 
   const handleTabChange = (newTab: string) => {
     // 只切换显示，不重新加载数据
@@ -510,44 +563,95 @@ const BarcodeList = () => {
         {/* 搜索和筛选区域 */}
         <div className={styles.filterSection}>
           <div className={styles.searchRow}>
+            <Dropdown ref={searchFieldDropdownRef}>
+              <Dropdown.Item
+                key="searchField"
+                title={getSearchFieldLabel(searchFieldType)}
+              >
+                <div className={styles.dropdownContent}>
+                  {searchFieldOptions.map(option => (
+                    <div
+                      key={option.key}
+                      className={`${styles.dropdownItem} ${searchFieldType === option.key ? styles.dropdownItemActive : ''}`}
+                      onClick={() => {
+                        setSearchFieldType(option.key)
+                        searchFieldDropdownRef.current?.close()
+                      }}
+                    >
+                      {option.title}
+                    </div>
+                  ))}
+                </div>
+              </Dropdown.Item>
+            </Dropdown>
             <SearchBar
-              placeholder={
-                activeTab === 'SN码管理' ? '请输入SN码' : '请输入09码'
-              }
+              placeholder={`请输入${getSearchFieldLabel(searchFieldType)}`}
               value={searchValue}
               onChange={setSearchValue}
-              onSearch={handleSearch}
-              className={styles.searchBar}
+              className={styles.searchInput}
+              showCancelButton={false}
+              icon={null}
             />
-            <Button 
-              size="small" 
-              fill="outline"
-              onClick={() => setStatusPopupVisible(true)}
-              className={styles.statusButton}
-            >
-              {getStatusLabel(statusFilter)}
-              <DownOutline style={{ marginLeft: 4, fontSize: 12 }} />
-            </Button>
-          </div>
-
-          <div className={styles.searchRow}>
-            <SearchBar
-              placeholder="请输入产品编码"
-              value={productCodeSearch}
-              onChange={setProductCodeSearch}
-              onSearch={handleSearch}
-              className={styles.searchBar}
-            />
+            <Dropdown ref={statusDropdownRef}>
+              <Dropdown.Item
+                key="status"
+                title={getStatusLabel(statusFilter)}
+              >
+                <div className={styles.dropdownContent}>
+                  {statusOptions.map(option => (
+                    <div
+                      key={option.value}
+                      className={`${styles.dropdownItem} ${statusFilter === option.value ? styles.dropdownItemActive : ''}`}
+                      onClick={() => {
+                        setStatusFilter(option.value)
+                        statusDropdownRef.current?.close()
+                        setBarcodeList([])
+                        setCurrentPage(1)
+                        setHasMore(true)
+                        loadBarcodeList(1, false, {
+                          searchValue,
+                          activeTab,
+                          statusFilter: option.value,
+                          dateRange,
+                          searchFieldType
+                        })
+                      }}
+                    >
+                      {option.label}
+                    </div>
+                  ))}
+                </div>
+              </Dropdown.Item>
+            </Dropdown>
           </div>
           
           <div className={styles.dateRow}>
             <Button 
               size="small" 
               fill="outline"
-              onClick={() => setCalendarVisible(true)}
-              className={styles.dateRangeButton}
+              onClick={() => setStartDatePickerVisible(true)}
+              className={styles.dateButton}
             >
-              {dateRange[0].toLocaleDateString('zh-CN').replace(/\//g, '-')} - {dateRange[1].toLocaleDateString('zh-CN').replace(/\//g, '-')}
+              {dateRange[0].toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+              }).replace(/\//g, '-')}
+              <DownOutline style={{ marginLeft: 4, fontSize: 12 }} />
+            </Button>
+            <span className={styles.dateSeparator}>-</span>
+            <Button 
+              size="small" 
+              fill="outline"
+              onClick={() => setEndDatePickerVisible(true)}
+              className={styles.dateButton}
+            >
+              {dateRange[1].toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+              }).replace(/\//g, '-')}
+              <DownOutline style={{ marginLeft: 4, fontSize: 12 }} />
             </Button>
           </div>
         </div>
@@ -605,15 +709,15 @@ const BarcodeList = () => {
                           <span className={styles.infoValue}>{item.productCode}</span>
                         </div>
                         <div className={styles.infoItem}>
-                          <span className={styles.infoLabel}>物料SN:</span>
-                          <span className={styles.infoValue}>{item.serialNumber}</span>
+                          <span className={styles.infoLabel}>单据编码:</span>
+                          <span className={styles.infoValue}>{item.orderCode}</span>
                         </div>
                       </div>
                       
                       <div className={styles.infoRow}>
                         <div className={styles.infoItem}>
-                          <span className={styles.infoLabel}>PN码:</span>
-                          <span className={styles.infoValue}>{item.pnCode}</span>
+                          <span className={styles.infoLabel}>出厂码:</span>
+                          <span className={styles.infoValue}>{item.factoryCode}</span>
                         </div>
                         <div className={styles.infoItem}>
                           <span className={styles.infoLabel}>供应商码:</span>
@@ -622,8 +726,13 @@ const BarcodeList = () => {
                       </div>
                       
                       <div className={styles.timeRow}>
-                        <span className={styles.timeText}>{item.createTime}</span>
+                        <span className={styles.infoLabel}>送货日期:</span>
+                        <span className={styles.timeText}>{item.deliveryDate}</span>
                       </div>
+                      
+                      {/* <div className={styles.timeRow}>
+                        <span className={styles.timeText}>{item.createTime}</span>
+                      </div> */}
                     </div>
                   </Card>
                 ))}
@@ -644,40 +753,34 @@ const BarcodeList = () => {
           </div>
         </PullToRefresh>
 
-        {/* 状态筛选弹窗 */}
-        <Popup
-          visible={statusPopupVisible}
-          onMaskClick={() => setStatusPopupVisible(false)}
-          position="bottom"
-          bodyStyle={{ borderTopLeftRadius: 8, borderTopRightRadius: 8 }}
-        >
-          <div className={styles.statusPopup}>
-            <div className={styles.popupHeader}>
-              <span>选择状态</span>
-              <Button 
-                fill="none" 
-                size="small"
-                onClick={() => setStatusPopupVisible(false)}
-              >
-                取消
-              </Button>
-            </div>
-            <List>
-              {statusOptions.map(option => (
-                <List.Item
-                  key={option.value}
-                  onClick={() => handleStatusSelect(option.value)}
-                  className={statusFilter === option.value ? styles.selectedItem : ''}
-                >
-                  {option.label}
-                </List.Item>
-              ))}
-            </List>
-          </div>
-        </Popup>
+        {/* 开始日期选择器 */}
+        <Picker
+          columns={generateDatePickerColumns()}
+          visible={startDatePickerVisible}
+          onClose={() => setStartDatePickerVisible(false)}
+          value={[
+            dateRange[0].getFullYear(),
+            dateRange[0].getMonth() + 1,
+            dateRange[0].getDate()
+          ]}
+          onConfirm={handleStartDatePickerConfirm}
+        />
 
-        {/* 日历选择弹窗 */}
-        <CalendarPicker
+        {/* 结束日期选择器 */}
+        <Picker
+          columns={generateDatePickerColumns()}
+          visible={endDatePickerVisible}
+          onClose={() => setEndDatePickerVisible(false)}
+          value={[
+            dateRange[1].getFullYear(),
+            dateRange[1].getMonth() + 1,
+            dateRange[1].getDate()
+          ]}
+          onConfirm={handleEndDatePickerConfirm}
+        />
+
+        {/* 保留日历选择功能（可能以后会用） */}
+        {/* <CalendarPicker
           visible={calendarVisible}
           defaultValue={dateRange}
           selectionMode="range"
@@ -685,7 +788,7 @@ const BarcodeList = () => {
           onMaskClick={() => setCalendarVisible(false)}
           onChange={handleDateRangeChange}
           onConfirm={handleDateRangeConfirm}
-        />
+        /> */}
       </div>
     </PageContainer>
   )

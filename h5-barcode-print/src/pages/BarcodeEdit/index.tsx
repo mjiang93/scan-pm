@@ -261,9 +261,13 @@ const BarcodeEdit = () => {
           <Form.Item
             name="materialCode"
             label="客户物料编码"
-            rules={[{ required: true, message: '请输入客户物料编码' }]}
+            rules={[
+              { required: true, message: '请输入客户物料编码' },
+              { min: 8, message: '客户物料编码至少8位' },
+              { max: 17, message: '客户物料编码最多17位' }
+            ]}
           >
-            <Input placeholder="PartNumber" />
+            <Input placeholder="PartNumber" maxLength={17} />
           </Form.Item>
 
           {/* po行号 - 非必填 */}
@@ -392,6 +396,8 @@ const BarcodeEdit = () => {
           setProductionStartVisible(false)
         }}
         title="选择生产开始日期"
+        min={new Date(new Date().getFullYear() - 100, 0, 1)}
+        max={new Date(new Date().getFullYear() + 100, 11, 31)}
         renderLabel={(type, data) => {
           if (type === 'year') return data + '年'
           if (type === 'month') return data + '月'
@@ -411,6 +417,8 @@ const BarcodeEdit = () => {
           setProductionEndVisible(false)
         }}
         title="选择生产结束日期"
+        min={new Date(new Date().getFullYear() - 100, 0, 1)}
+        max={new Date(new Date().getFullYear() + 100, 11, 31)}
         renderLabel={(type, data) => {
           if (type === 'year') return data + '年'
           if (type === 'month') return data + '月'
@@ -430,6 +438,8 @@ const BarcodeEdit = () => {
           setDeliveryDateVisible(false)
         }}
         title="选择送货日期"
+        min={new Date(new Date().getFullYear() - 100, 0, 1)}
+        max={new Date(new Date().getFullYear() + 100, 11, 31)}
         renderLabel={(type, data) => {
           if (type === 'year') return data + '年'
           if (type === 'month') return data + '月'
