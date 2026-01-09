@@ -109,7 +109,9 @@ const PrintLabel = () => {
         await updatePrintStatus({
           id: parseInt(recordId),
           operator: userInfo?.userName || 'unknown',
-          wbzPrintCnt: 1
+          wbzPrintCnt: 1,
+          nbzPrintCnt: 0,
+          btPrintCnt: 0,
         })
       }
       
@@ -212,12 +214,13 @@ const PrintLabel = () => {
                   <td className={styles.labelCell}>批号</td>
                   <td className={styles.valueCell} colSpan={3}>
                     <div className={styles.batchWrapper}>
-                      <Barcode 
+                      {printData.batchNumber}
+                      {/* <Barcode 
                         value={printData.batchNumber}
                         width={1.5}
                         height={30}
                         fontSize={8}
-                      />
+                      /> */}
                     </div>
                   </td>
                 </tr>

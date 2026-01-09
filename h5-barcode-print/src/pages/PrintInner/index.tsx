@@ -103,7 +103,9 @@ const PrintInner = () => {
         await updatePrintStatus({
           id: parseInt(recordId),
           operator: userInfo?.userName || 'unknown',
-          nbzPrintCnt: 1
+          nbzPrintCnt: 1,
+          btPrintCnt: 0,
+          wbzPrintCnt: 0
         })
       }
       

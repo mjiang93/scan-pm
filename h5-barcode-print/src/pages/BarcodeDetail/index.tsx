@@ -501,13 +501,13 @@ const BarcodeDetail = () => {
       return
     }
     
-    if (!detail?.attachments || detail.attachments === 0) {
-      Toast.show({
-        icon: 'fail',
-        content: '请先添加附件数量'
-      })
-      return
-    }
+    // if (!detail?.attachments || detail.attachments === 0) {
+    //   Toast.show({
+    //     icon: 'fail',
+    //     content: '请先添加附件数量'
+    //   })
+    //   return
+    // }
     
     if (!detail?.factoryCode || !detail?.factoryCode.trim()) {
       Toast.show({
@@ -961,14 +961,14 @@ const BarcodeDetail = () => {
             >
               添加图纸版本
             </Button>
-            <Button 
+            {/* <Button 
               fill="outline" 
               color="primary"
               onClick={handleEdit}
               className={styles.actionBtn}
             >
               编辑
-            </Button>
+            </Button> */}
           </div>
 
           {/* 打印按钮区域 - 根据条件显示 */}

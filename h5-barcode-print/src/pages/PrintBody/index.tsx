@@ -96,7 +96,9 @@ const PrintBody = () => {
         await updatePrintStatus({
           id: parseInt(id),
           operator: userInfo?.userName || 'unknown',
-          btPrintCnt: 1
+          btPrintCnt: 1,
+          nbzPrintCnt: 0,
+          wbzPrintCnt: 0
         })
       }
       
