@@ -45,12 +45,12 @@ const PrintBody = () => {
         // 根据btprint接口返回的数据映射到打印数据
         const mappedData: PrintData = {
           no: 'G1-1', // 固定值或从配置获取
-          size: '42mm*10mm', // 固定值或从配置获取
+          size: '48mm*6mm', // 固定值或从配置获取
           pn: btPrintData.pnCode || '', // PN使用pnCode
           rev: btPrintData.revCode || '', // Rev使用revCode
           model: btPrintData.modelCode || '', // Model使用modelCode
           sn: btPrintData.codeSN || '', // SN使用codeSN
-          qrCodeData: `PN:${btPrintData.pnCode || ''};Rev:${btPrintData.revCode || ''};Model:${btPrintData.modelCode || ''};SN:${btPrintData.codeSN || ''}`,
+          qrCodeData: btPrintData.codeSN,
           barcodes: btPrintData.fjList || [] // 条形码列表
         }
         setPrintData(mappedData)

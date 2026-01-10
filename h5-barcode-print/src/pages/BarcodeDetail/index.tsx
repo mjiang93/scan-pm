@@ -29,6 +29,7 @@ interface BarcodeDetail {
   deliveryDate: string
   drawingVersion: string
   attachments: number
+  printStatus: number // 打印状态：0-未打印，1-部份打印，2-已打印
 }
 
 interface InnerPackageInfo {
@@ -62,6 +63,7 @@ const BarcodeDetail = () => {
   const btcode = searchParams.get('btcode') || ''
   const nbzcode = searchParams.get('nbzcode') || ''
   const type = searchParams.get('type') || ''
+  const from = searchParams.get('from') || '' // 来源页面标识
   const factoryCodeFromScan = searchParams.get('factoryCode') || ''
   const [loading, setLoading] = useState(true)
   const [detail, setDetail] = useState<BarcodeDetail | null>(null)
@@ -163,7 +165,8 @@ const BarcodeDetail = () => {
           code09: data.code09 || '',
           deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : '',
           drawingVersion: data.drawingVersion || '',
-          attachments: data.accessoryCnt || 0
+          attachments: data.accessoryCnt || 0,
+          printStatus: data.printStatus || 0
         }
         setDetail(mappedDetail)
       } catch (error: unknown) {
@@ -230,7 +233,8 @@ const BarcodeDetail = () => {
           code09: data.code09 || '',
           deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : '',
           drawingVersion: data.drawingVersion || '',
-          attachments: data.accessoryCnt || 0
+          attachments: data.accessoryCnt || 0,
+          printStatus: data.printStatus || 0
         }
         setDetail(mappedDetail)
         
@@ -254,6 +258,46 @@ const BarcodeDetail = () => {
       isMounted = false
     }
   }, [factoryCodeFromScan, id, userInfo])
+
+  // 获取打印状态按钮
+  const getPrintStatusButton = () => {
+    if (!detail) return null
+    
+    if (detail.printStatus === 0) {
+      return (
+        <Button 
+          color="warning" 
+          size="small"
+          onClick={handlePrint}
+          className={styles.printBtn}
+        >
+          未打印
+        </Button>
+      )
+    } else if (detail.printStatus === 1) {
+      return (
+        <Button 
+          style={{ backgroundColor: '#ffc107', color: 'white' }}
+          size="small"
+          onClick={handlePrint}
+          className={styles.printBtn}
+        >
+          部分打印
+        </Button>
+      )
+    } else {
+      return (
+        <Button 
+          style={{ backgroundColor: '#00d4aa', color: 'white' }}
+          size="small"
+          onClick={handlePrint}
+          className={styles.printBtn}
+        >
+          已打印
+        </Button>
+      )
+    }
+  }
 
   const handlePrint = () => {
     Toast.show({ content: '开始打印...' })
@@ -329,7 +373,8 @@ const BarcodeDetail = () => {
         code09: data.code09 || '',
         deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : '',
         drawingVersion: data.drawingVersion || '',
-        attachments: data.accessoryCnt || 0
+        attachments: data.accessoryCnt || 0,
+        printStatus: data.printStatus || 0
       }
       setDetail(mappedDetail)
     } catch (error) {
@@ -402,7 +447,8 @@ const BarcodeDetail = () => {
         code09: data.code09 || '',
         deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : '',
         drawingVersion: data.drawingVersion || '',
-        attachments: data.accessoryCnt || 0
+        attachments: data.accessoryCnt || 0,
+        printStatus: data.printStatus || 0
       }
       setDetail(mappedDetail)
     } catch (error: unknown) {
@@ -472,7 +518,8 @@ const BarcodeDetail = () => {
         code09: data.code09 || '',
         deliveryDate: data.deliveryDate ? new Date(parseInt(data.deliveryDate)).toLocaleDateString('zh-CN') : '',
         drawingVersion: data.drawingVersion || '',
-        attachments: data.accessoryCnt || 0
+        attachments: data.accessoryCnt || 0,
+        printStatus: data.printStatus || 0
       }
       setDetail(mappedDetail)
     } catch (error) {
@@ -568,26 +615,29 @@ const BarcodeDetail = () => {
     navigate(`/scan?type=mom&id=${encodeURIComponent(barcodeId)}&returnType=${encodeURIComponent(type || '')}`)
   }
 
-  // 创建右侧按钮元素
-  const renderRightButton = () => (
-    <span 
-      onClick={(e) => {
-        e.stopPropagation()
-        handleBindMomCode()
-      }}
-      style={{ 
-        color: '#1677ff', 
-        fontSize: '14px',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px'
-      }}
-    >
-      绑定MOM出厂码
-      <span style={{ fontSize: '16px', color: '#666' }}>⛶</span>
-    </span>
-  )
+  // 创建右侧按钮元素 - 当 from=list 时不显示
+  const renderRightButton = () => {
+    
+    return (
+      <span 
+        onClick={(e) => {
+          e.stopPropagation()
+          handleBindMomCode()
+        }}
+        style={{ 
+          color: '#1677ff', 
+          fontSize: '14px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px'
+        }}
+      >
+        绑定MOM出厂码
+        <span style={{ fontSize: '16px', color: '#666' }}>⛶</span>
+      </span>
+    )
+  }
 
   if (loading) {
     return <Loading loading fullscreen />
@@ -830,14 +880,7 @@ const BarcodeDetail = () => {
               <span className={styles.projectLabel}>产品编码：</span>
               <span className={styles.projectCode}>{detail.productCode}</span>
             </div>
-            <Button 
-              color="primary" 
-              size="small"
-              onClick={handlePrint}
-              className={styles.printBtn}
-            >
-              未打印
-            </Button>
+            {getPrintStatusButton()}
           </div>
 
           <div className={styles.infoGrid}>
@@ -934,86 +977,88 @@ const BarcodeDetail = () => {
           </div>
         </Card>
 
-        {/* 操作按钮区域 */}
-        <div className={styles.actionSection}>
-          <div className={styles.actionRow}>
-            <Button 
-              fill="outline" 
-              color="primary"
-              onClick={handleAddAttachment}
-              className={styles.actionBtn}
-            >
-              添加附件
-            </Button>
-            {/* <Button 
-              fill="outline" 
-              color="primary"
-              onClick={handleEditDeliveryDate}
-              className={styles.actionBtn}
-            >
-              修改送货日期
-            </Button> */}
-            <Button 
-              fill="outline" 
-              color="primary"
-              onClick={handleAddPaperVersion}
-              className={styles.actionBtn}
-            >
-              添加图纸版本
-            </Button>
-            {/* <Button 
-              fill="outline" 
-              color="primary"
-              onClick={handleEdit}
-              className={styles.actionBtn}
-            >
-              编辑
-            </Button> */}
+        {/* 操作按钮区域 - 当 from=list 时隐藏 */}
+        {(
+          <div className={styles.actionSection}>
+            <div className={styles.actionRow}>
+              <Button 
+                fill="outline" 
+                color="primary"
+                onClick={handleAddAttachment}
+                className={styles.actionBtn}
+              >
+                添加附件
+              </Button>
+              {/* <Button 
+                fill="outline" 
+                color="primary"
+                onClick={handleEditDeliveryDate}
+                className={styles.actionBtn}
+              >
+                修改送货日期
+              </Button> */}
+              <Button 
+                fill="outline" 
+                color="primary"
+                onClick={handleAddPaperVersion}
+                className={styles.actionBtn}
+              >
+                添加图纸版本
+              </Button>
+              {/* <Button 
+                fill="outline" 
+                color="primary"
+                onClick={handleEdit}
+                className={styles.actionBtn}
+              >
+                编辑
+              </Button> */}
+            </div>
+
+            {/* 打印按钮区域 - 根据条件显示 */}
+            {((!id && type === 'body') || (id && type === 'body')) && (
+              <div className={styles.printSection}>
+                <Button 
+                  block
+                  fill="outline" 
+                  color="primary"
+                  onClick={handlePrintBody}
+                  className={styles.printBodyBtn}
+                >
+                  生成并打印本体码
+                </Button>
+              </div>
+            )}
+
+            {!id && type === 'inner' && (
+              <div className={styles.printSection}>
+                <Button 
+                  block
+                  fill="outline" 
+                  color="primary"
+                  onClick={handlePrintInner}
+                  className={styles.printInnerBtn}
+                >
+                  打印内包装码
+                </Button>
+              </div>
+            )}
+
+            {!id && type === 'label' && (
+              <div className={styles.printSection}>
+                <Button 
+                  block
+                  fill="outline" 
+                  color="primary"
+                  onClick={handlePrintLabel}
+                  className={styles.printLabelBtn}
+                >
+                  收货外标签码
+                </Button>
+              </div>
+            )}
           </div>
-
-          {/* 打印按钮区域 - 根据条件显示 */}
-          {((!id && type === 'body') || (id && type === 'body')) && (
-            <div className={styles.printSection}>
-              <Button 
-                block
-                fill="outline" 
-                color="primary"
-                onClick={handlePrintBody}
-                className={styles.printBodyBtn}
-              >
-                生成并打印本体码
-              </Button>
-            </div>
-          )}
-
-          {!id && type === 'inner' && (
-            <div className={styles.printSection}>
-              <Button 
-                block
-                fill="outline" 
-                color="primary"
-                onClick={handlePrintInner}
-                className={styles.printInnerBtn}
-              >
-                打印内包装码
-              </Button>
-            </div>
-          )}
-
-          {!id && type === 'label' && (
-            <div className={styles.printSection}>
-              <Button 
-                block
-                fill="outline" 
-                color="primary"
-                onClick={handlePrintLabel}
-                className={styles.printLabelBtn}
-              >
-                收货外标签码
-              </Button>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       {/* 附件数量选择器 */}

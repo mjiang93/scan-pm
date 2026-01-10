@@ -205,12 +205,12 @@
   /* 重置打印内容的样式 */
   .printContent {
     position: static !important;
-    width: 77mm !important;
-    height: 50mm !important;
+    width: 100mm !important;
+    height: 70mm !important;
     background: white !important;
     border-radius: 0 !important;
     margin: 0 !important;
-    padding: 1mm !important;
+    padding: 1.5mm !important;
     box-shadow: none !important;
     border: none !important;
     display: block !important;
@@ -220,7 +220,7 @@
   
   .preview {
     border: 1px solid #000 !important;
-    padding: 1mm !important;
+    padding: 1.5mm !important;
     border-radius: 0 !important;
     background: white !important;
     width: 100% !important;
@@ -231,28 +231,28 @@
   .labelTable {
     width: 100% !important;
     border-collapse: collapse !important;
-    margin-bottom: 1mm !important;
-    font-size: 6pt !important;
-    line-height: 1.1 !important;
+    margin-bottom: 1.5mm !important;
+    font-size: 8pt !important;
+    line-height: 1.2 !important;
     
     thead {
       .tableTitle {
         border: 1px solid #000 !important;
         text-align: center !important;
-        font-size: 8px !important;
+        font-size: 11px !important;
         font-weight: bold !important;
         color: #000 !important;
-        padding: 2px !important;
+        padding: 3px !important;
         background-color: #f5f5f5 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
-        height: 8mm!important;
+        height: 11mm!important;
       }
     }
     
     td, th {
       border: 1px solid #000 !important;
-      padding: 1px 2px !important;
+      padding: 2px 3px !important;
       height: auto !important;
     }
     
@@ -262,39 +262,39 @@
       color: #000 !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
-      font-size: 5.5pt !important;
-      height: 5mm!important;
+      font-size: 7.5pt !important;
+      height: 7mm!important;
     }
     
     .valueCell {
       color: #333 !important;
-      font-size: 6pt !important;
+      font-size: 8pt !important;
     }
     
     .qrSection {
-      padding: 2px !important;
+      padding: 3px !important;
     }
     
     .qrCodeContainer {
-      gap: 2px !important;
+      gap: 3px !important;
     }
     
     .qrCode {
-      width: 38px !important;
-      height: 38px !important;
-      padding: 1px !important;
+      width: 52px !important;
+      height: 52px !important;
+      padding: 2px !important;
       border: 1px solid #000 !important;
       
       canvas {
-        width: 36px !important;
-        height: 36px !important;
+        width: 48px !important;
+        height: 48px !important;
       }
     }
     
     .batchWrapper {
       display: flex !important;
       justify-content: center !important;
-      padding: 0.5mm 0 !important;
+      padding: 0.7mm 0 !important;
     }
   }
   
@@ -311,6 +311,6 @@
   /* 打印页面设置 */
   @page {
     margin: 0 !important;
-    size: 77mm 50mm !important;
+    size: 100mm 70mm !important;
   }
 }

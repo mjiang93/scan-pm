@@ -54,7 +54,7 @@ const PrintLabel = () => {
         
         const mappedData: PrintData = {
           no: 'G1-1',
-          size: '77mm*50mm',
+          size: '100mm*70mm',
           title: '供应商送货标签',
           materialCode: detail.materialCode || '',
           nameModel: detail.nameModel || '',
@@ -184,7 +184,7 @@ const PrintLabel = () => {
                       <div className={styles.qrCode}>
                         <QRCode 
                           value={printData.qrCodeData}
-                          size={90}
+                          size={120}
                         />
                       </div>
                     </div>

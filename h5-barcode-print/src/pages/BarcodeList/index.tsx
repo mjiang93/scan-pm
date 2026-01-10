@@ -325,10 +325,12 @@ const BarcodeList = () => {
   }
 
   const getActionButton = (item: BarcodeItem) => {
-    // 根据当前标签页和打印状态显示不同按钮
-    if (activeTab === 'SN码管理') {
-      // 本体码打印状态
-      if (item.btPrintCnt === 0) {
+    // 根据 printStatus 显示不同按钮状态
+    // printStatus: 0-未打印，1-部分打印，2-已打印
+    
+    if (activeTab === 'SN码管理' || activeTab === '09码管理') {
+      // SN码和09码使用相同的打印状态
+      if (item.printStatus === 0) {
         return (
           <Button 
             color="warning" 
@@ -341,49 +343,7 @@ const BarcodeList = () => {
             未打印
           </Button>
         )
-      } else if (item.btPrintCnt === 1) {
-        return (
-          <Button 
-            style={{ backgroundColor: '#ffc107', color: 'white' }}
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation()
-              handleReprint(item, 'body')
-            }}
-          >
-            部分打印
-          </Button>
-        )
-      } else {
-        return (
-          <Button 
-            style={{ backgroundColor: '#00d4aa', color: 'white' }}
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation()
-              handleReprint(item, 'body')
-            }}
-          >
-            已打印
-          </Button>
-        )
-      }
-    } else if (activeTab === '09码管理') {
-      // 09码与本体码状态相同
-      if (item.btPrintCnt === 0) {
-        return (
-          <Button 
-            color="warning" 
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation()
-              handlePrint(item, 'body')
-            }}
-          >
-            未打印
-          </Button>
-        )
-      } else if (item.btPrintCnt === 1) {
+      } else if (item.printStatus === 1) {
         return (
           <Button 
             style={{ backgroundColor: '#ffc107', color: 'white' }}
@@ -684,7 +644,7 @@ const BarcodeList = () => {
                   <Card 
                     key={item.id} 
                     className={styles.barcodeCard}
-                    onClick={() => navigate(`/barcode-detail?id=${item.id}&type=body`)}
+                    onClick={() => navigate(`/barcode-detail?id=${item.id}&type=body&from=list`)}
                   >
                     <div className={styles.cardHeader}>
                       <div className={styles.codeSection}>

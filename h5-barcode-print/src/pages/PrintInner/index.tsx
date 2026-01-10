@@ -50,7 +50,7 @@ const PrintInner = () => {
         
         const mappedData: PrintData = {
           no: 'G1-1',
-          size: '77mm*50mm',
+          size: '100mm*70mm',
           partNo: detail.partNo || '',
           barcode: detail.partNo || '',
           qty: detail.qty ? parseInt(detail.qty) : 1,
@@ -171,7 +171,7 @@ const PrintInner = () => {
                     <Barcode 
                       value={printData.barcode}
                       width={1}
-                      height={30}
+                      height={20}
                       fontSize={9}
                       displayValue={false}
                     />
@@ -199,7 +199,7 @@ const PrintInner = () => {
               <div className={styles.qrCodeSection}>
                 <QRCode 
                   value={printData.qrCodeData}
-                  size={60}
+                  size={80}
                 />
               </div>
             </div>
@@ -219,7 +219,7 @@ const PrintInner = () => {
                   <Barcode 
                     value={printData.smallBarcode}
                     width={1}
-                    height={25}
+                    height={20}
                     fontSize={7}
                     displayValue={false}
                   />
