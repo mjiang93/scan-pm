@@ -827,8 +827,8 @@ const BarcodeDetail = () => {
         <Card className={styles.mainCard}>
           <div className={styles.mainHeader}>
             <div className={styles.projectInfo}>
-              <span className={styles.projectLabel}>项目编码：</span>
-              <span className={styles.projectCode}>{detail.projectCode}</span>
+              <span className={styles.projectLabel}>产品编码：</span>
+              <span className={styles.projectCode}>{detail.productCode}</span>
             </div>
             <Button 
               color="primary" 
@@ -843,8 +843,8 @@ const BarcodeDetail = () => {
           <div className={styles.infoGrid}>
             {/* 产品编码和产品名称 */}
             <div className={styles.infoRow}>
-              <span className={styles.label}>产品编码：</span>
-              <span className={styles.value}>{detail.productCode}</span>
+              <span className={styles.label}>项目编码：</span>
+              <span className={styles.value}>{detail.projectCode}</span>
             </div>
 
             <div className={styles.infoRow}>

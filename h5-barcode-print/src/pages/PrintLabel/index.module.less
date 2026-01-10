@@ -64,9 +64,22 @@
   margin-bottom: 12px;
   font-size: 14px;
   
-  td {
+  thead {
+    .tableTitle {
+      border: 1px solid #333;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
+      padding: 8px;
+      background-color: #f5f5f5;
+      height: 40px;
+    }
+  }
+  
+  td, th {
     border: 1px solid #333;
-    padding: 8px 12px;
+    // padding: 8px 12px;
     vertical-align: middle;
     height: 40px;
   }
@@ -75,7 +88,7 @@
     background-color: #f5f5f5;
     font-weight: bold;
     color: #333;
-    width: 100px;
+    // width: 100px;
     text-align: center;
     white-space: nowrap;
   }
@@ -183,7 +196,7 @@
   }
   
   /* 重置body样式 */
-  body {
+  * {
     margin: 0 !important;
     padding: 0 !important;
     background: white !important;
@@ -192,46 +205,54 @@
   /* 重置打印内容的样式 */
   .printContent {
     position: static !important;
-    width: 100% !important;
+    width: 77mm !important;
+    height: 50mm !important;
     background: white !important;
     border-radius: 0 !important;
     margin: 0 !important;
-    padding: 5mm !important;
+    padding: 1mm !important;
     box-shadow: none !important;
     border: none !important;
     display: block !important;
     visibility: visible !important;
+    overflow: hidden !important;
   }
   
   .preview {
-    border: 2px solid #000 !important;
-    padding: 3mm !important;
+    border: 1px solid #000 !important;
+    padding: 1mm !important;
     border-radius: 0 !important;
     background: white !important;
-  }
-  
-  .titleSection {
-    text-align: center !important;
-    margin-bottom: 8px !important;
-    padding-bottom: 4px !important;
-    border-bottom: 1px solid #000 !important;
-    
-    h2 {
-      font-size: 10px !important;
-      color: #000 !important;
-      margin: 0 !important;
-    }
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
   }
   
   .labelTable {
     width: 100% !important;
     border-collapse: collapse !important;
-    margin-bottom: 2mm !important;
-    font-size: 7pt !important;
+    margin-bottom: 1mm !important;
+    font-size: 6pt !important;
+    line-height: 1.1 !important;
     
-    td {
+    thead {
+      .tableTitle {
+        border: 1px solid #000 !important;
+        text-align: center !important;
+        font-size: 8px !important;
+        font-weight: bold !important;
+        color: #000 !important;
+        padding: 2px !important;
+        background-color: #f5f5f5 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        height: 8mm!important;
+      }
+    }
+    
+    td, th {
       border: 1px solid #000 !important;
-      padding: 2px 4px !important;
+      padding: 1px 2px !important;
       height: auto !important;
     }
     
@@ -241,36 +262,39 @@
       color: #000 !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
+      font-size: 5.5pt !important;
+      height: 5mm!important;
     }
     
     .valueCell {
       color: #333 !important;
+      font-size: 6pt !important;
     }
     
     .qrSection {
-      padding: 4px !important;
+      padding: 2px !important;
     }
     
     .qrCodeContainer {
-      gap: 4px !important;
+      gap: 2px !important;
     }
     
     .qrCode {
-      width: 50px !important;
-      height: 50px !important;
-      padding: 2px !important;
+      width: 38px !important;
+      height: 38px !important;
+      padding: 1px !important;
       border: 1px solid #000 !important;
       
       canvas {
-        width: 46px !important;
-        height: 46px !important;
+        width: 36px !important;
+        height: 36px !important;
       }
     }
     
     .batchWrapper {
       display: flex !important;
       justify-content: center !important;
-      padding: 1mm 0 !important;
+      padding: 0.5mm 0 !important;
     }
   }
   
@@ -286,7 +310,7 @@
   
   /* 打印页面设置 */
   @page {
-    margin: 5mm !important;
-    size: A4 portrait !important;
+    margin: 0 !important;
+    size: 77mm 50mm !important;
   }
 }

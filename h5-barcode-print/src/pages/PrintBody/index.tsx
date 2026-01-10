@@ -102,7 +102,7 @@ const PrintBody = () => {
         })
       }
       
-      Toast.show({ icon: 'success', content: '打印任务已发送' })
+      // Toast.show({ icon: 'success', content: '打印任务已发送' })
       
     } catch (error) {
       console.error('打印失败:', error)
@@ -154,40 +154,44 @@ const PrintBody = () => {
         <div ref={printRef} className={styles.printContent}>
           {/* 打印预览区域 */}
           <div className={styles.preview}>
-            {/* 二维码和信息区域 */}
+            {/* 左侧：二维码和信息区域 */}
             <div className={styles.qrSection}>
               <div className={styles.qrCode}>
                 <QRCode 
                   value={printData.qrCodeData}
-                  size={100}
+                  size={80}
                 />
               </div>
               <div className={styles.qrInfo}>
                 <div className={styles.qrInfoRow}>
-                  <span className={styles.qrLabel}>PN:</span>
-                  <span className={styles.qrValue}>{printData.pn}</span>
-                  <span className={styles.qrLabel}>Rev:</span>
-                  <span className={styles.qrValue}>{printData.rev}</span>
+                  <div className={styles.qrLabel1}>
+                    <div className={styles.qrLabel}>PN:</div>
+                    <div className={styles.qrValue}>{printData.pn}</div>
+                  </div>
+                  <div className={styles.qrLabel1}>
+                    <div className={styles.qrLabel}>Rev:</div>
+                    <div className={styles.qrValue}>{printData.rev}</div>
+                  </div>
                 </div>
                 <div className={styles.qrInfoRow}>
-                  <span className={styles.qrLabel}>Model:</span>
-                  <span className={styles.qrValue}>{printData.model}</span>
+                  <div className={styles.qrLabel}>Model:</div>
+                  <div className={styles.qrValue}>{printData.model}</div>
                 </div>
                 <div className={styles.qrInfoRow}>
-                  <span className={styles.qrLabel}>SN:</span>
-                  <span className={styles.qrValue}>{printData.sn}</span>
+                  <div className={styles.qrLabel}>SN:</div>
+                  <div className={styles.qrValue}>{printData.sn}</div>
                 </div>
               </div>
             </div>
 
-            {/* 条形码区域 - 循环显示 */}
+            {/* 右侧：条形码区域 - 垂直排列 */}
             {printData.barcodes.map((barcodeValue, index) => (
               <div key={index} className={styles.barcodeSection}>
                 <Barcode 
                   value={barcodeValue}
-                  width={1.5}
-                  height={50}
-                  fontSize={10}
+                  width={1}
+                  height={30}
+                  fontSize={8}
                 />
               </div>
             ))}

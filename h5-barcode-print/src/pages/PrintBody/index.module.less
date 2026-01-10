@@ -64,16 +64,26 @@
   padding: 20px;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
+  
+  /* 预览时模拟42mm x 10mm的比例 (约4.2:1) */
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
 }
+.qrLabel1 {
 
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
 .qrSection {
   display: flex;
-  align-items: center; // 改为居中对齐
-  gap: 12px; // 增加间距从20px到30px
-  margin-bottom: 20px;
-  padding: 16px;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  background: #fafafa;
   
   .qrCode {
     flex-shrink: 0;
@@ -84,14 +94,14 @@
   
   .qrInfo {
     flex: 1;
-    min-width: 0; // 允许flex子元素收缩
+    min-width: 0;
     
     .qrInfoRow {
       display: flex;
-      align-items: flex-start; // 改为顶部对齐，支持多行
-      margin-bottom: 8px; // 增加行间距从6px到8px
-      font-size: 14px;
-      flex-wrap: wrap; // 允许换行
+      align-items: center;
+      margin-bottom: 4px;
+      font-size: 12px;
+      flex-wrap: wrap;
       
       &:last-child {
         margin-bottom: 0;
@@ -99,33 +109,37 @@
       
       .qrLabel {
         font-weight: bold;
-        margin-right: 8px; // 增加标签和值之间的间距从6px到8px
+        margin-right: 4px;
         color: #333;
-        flex-shrink: 0; // 标签不收缩
+        flex-shrink: 0;
       }
       
       .qrValue {
         color: #666;
-        word-break: break-all; // 允许在任意字符处换行
-        overflow-wrap: break-word; // 长单词换行
-        max-width: 100%; // 限制最大宽度
-        flex: 1; // 占据剩余空间
-        min-width: 0; // 允许收缩
+        word-break: break-all;
+        overflow-wrap: break-word;
+        flex: 1;
+        min-width: 0;
       }
     }
   }
 }
 
 .barcodeSection {
-  margin-bottom: 20px;
-  padding: 16px;
+  margin-top: 12px;
+  padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
   text-align: center;
   overflow: hidden;
+  background: #fafafa;
   
-  &:last-child {
-    margin-bottom: 0;
+  &:first-of-type {
+    margin-top: 12px;
+  }
+  
+  &:not(:last-child) {
+    margin-bottom: 8px;
   }
   
   canvas {
@@ -199,7 +213,10 @@
     display: none !important;
     visibility: hidden !important;
   }
-  
+  * {
+    margin: 0!important;
+    padding: 0!important;
+  }
   /* 重置body样式 */
   body {
     margin: 0 !important;
@@ -210,15 +227,15 @@
   /* 重置打印内容的样式 */
   .printContent {
     position: static !important;
-    width: 100% !important;
     background: white !important;
     border-radius: 0 !important;
     margin: 0 !important;
-    padding: 5mm !important;
+    padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
     display: block !important;
     visibility: visible !important;
+    overflow: visible !important;
   }
   
   /* 确保打印内容的所有子元素都显示 */
@@ -235,96 +252,126 @@
   .qrInfoRow,
   .qrLabel,
   .qrValue {
-    display: block !important;
     visibility: visible !important;
   }
   
-  /* 打印时的预览区域样式 */
+  /* 打印时的预览区域样式 - 垂直布局，每个元素独立页面 */
   .preview {
     border: none !important;
     padding: 0 !important;
     margin: 0 !important;
-    background: transparent !important;
+    background: white !important;
+    display: block !important;
   }
   
-  /* 打印时的二维码区域 */
+  /* 打印时的二维码区域 - 独立页面 42mm x 10mm */
   .qrSection {
-    border: 2px solid #000 !important;
-    margin-bottom: 3mm !important;
-    padding: 2mm !important;
-    page-break-inside: avoid !important;
+    width: 42mm !important;
+    height: 10mm !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 1mm !important;
+    width: 100%!important;
     background: white !important;
     border-radius: 0 !important;
     display: flex !important;
-    align-items: center !important; // 打印时也居中对齐
-    gap: 5mm !important; // 打印时增加间距
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.8mm !important;
+    box-sizing: border-box !important;
+    page-break-after: always !important;
+    page-break-inside: avoid !important;
     
     .qrCode {
-      margin-right: 0 !important;
-      display: block !important;
+      margin: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
       flex-shrink: 0 !important;
+      width: 9mm !important;
+      height: 9mm !important;
+      
+      canvas {
+        width: 9mm !important;
+        height: 9mm !important;
+        display: block !important;
+      }
     }
     
     .qrInfo {
-      display: block !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
       flex: 1 !important;
-      min-width: 0 !important;
-      
+      gap: 0.3mm !important;
+      width: 100%!important;
       .qrInfoRow {
         display: flex !important;
-        flex-wrap: wrap !important;
-        align-items: flex-start !important;
-        margin-bottom: 1.5mm !important; // 增加行间距
-        font-size: 9pt !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        margin: 0 !important;
+        font-size: 5pt !important;
+        line-height: 1.1 !important;
         
         .qrLabel {
           font-weight: bold !important;
           color: #000 !important;
-          display: inline !important;
+          display: flex !important;
           flex-shrink: 0 !important;
-          margin-right: 2mm !important; // 增加标签和值之间的间距
+          margin-right: 0.3mm !important;
         }
         
         .qrValue {
-          color: #333 !important;
+          color: #000 !important;
           display: inline !important;
-          word-break: break-all !important;
-          overflow-wrap: break-word !important;
-          max-width: 100% !important;
+          white-space: nowrap !important;
+          margin-right: 1mm!important;
         }
       }
     }
   }
   
-  /* 打印时的条形码区域 */
+  /* 打印时的条形码区域 - 每个条形码独立页面 42mm x 10mm */
   .barcodeSection {
-    border: 2px solid #000 !important;
-    margin-bottom: 3mm !important;
-    padding: 2mm !important;
-    page-break-inside: avoid !important;
+    width: 42mm !important;
+    height: 10mm !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 1mm !important;
     background: white !important;
     border-radius: 0 !important;
     text-align: center !important;
-    display: block !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    page-break-after: always !important;
+    page-break-inside: avoid !important;
     
+    /* 移除最后一个元素的分页 */
     &:last-child {
-      margin-bottom: 0 !important;
+      page-break-after: auto !important;
+    }
+    
+    canvas {
+      max-height: 8mm !important;
+      max-width: 40mm !important;
+      width: auto !important;
+      height: auto !important;
+      display: block !important;
+      margin: 0 auto !important;
     }
   }
   
   /* 确保Canvas在打印时正确显示 */
   canvas {
     display: block !important;
-    margin: 0 auto !important;
-    max-width: none !important;
-    width: auto !important;
-    height: auto !important;
     visibility: visible !important;
   }
   
-  /* 打印页面设置 */
+  /* 打印页面设置 - 42mm x 10mm */
   @page {
-    margin: 5mm !important;
-    size: A4 portrait !important;
+    margin: 0 !important;
+    size: 42mm 10mm !important;
   }
 }

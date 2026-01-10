@@ -59,7 +59,7 @@ const PrintInner = () => {
           supplierCode: detail.supplierCode || '',
           smallBarcode: detail.supplierCode || '',
           sn: detail.codeSN || '',
-          qrCodeData: `PartNo:${detail.partNo || ''};QTY:${detail.qty || 1};DC:${dcDate};SN:${detail.codeSN || ''}`
+          qrCodeData: detail.codeSN
         }
         setPrintData(mappedData)
       }
@@ -109,7 +109,7 @@ const PrintInner = () => {
         })
       }
       
-      Toast.show({ icon: 'success', content: '打印任务已发送' })
+      // Toast.show({ icon: 'success', content: '打印任务已发送' })
       
     } catch (error) {
       console.error('打印失败:', error)
@@ -162,32 +162,36 @@ const PrintInner = () => {
           <div className={styles.preview}>
             {/* 左侧区域 */}
             <div className={styles.leftSection}>
-              {/* PartNo和条形码 */}
-              <div className={styles.partNoSection}>
-                <div className={styles.partNoLabel}>PartNO: {printData.partNo}</div>
-                <div className={styles.barcodeWrapper}>
-                  <Barcode 
-                    value={printData.barcode}
-                    width={2}
-                    height={40}
-                    fontSize={10}
-                  />
-                </div>
-              </div>
+              <div className={styles.leftSection1}>
 
-              {/* 数量和描述 */}
-              <div className={styles.infoSection}>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>QTY:</span>
-                  <span className={styles.infoValue}>{printData.qty}</span>
+                {/* PartNo和条形码 */}
+                <div className={styles.partNoSection}>
+                  <div className={styles.partNoLabel}>PartNO: {printData.partNo}</div>
+                  <div className={styles.barcodeWrapper}>
+                    <Barcode 
+                      value={printData.barcode}
+                      width={1}
+                      height={30}
+                      fontSize={9}
+                      displayValue={false}
+                    />
+                  </div>
                 </div>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>描述:</span>
-                  <span className={styles.infoValue}>{printData.description}</span>
-                </div>
-                <div className={`${styles.infoItem} ${styles.fullWidth}`}>
-                  <span className={styles.infoLabel}>SN:</span>
-                  <span className={styles.infoValue}>{printData.sn}</span>
+
+                {/* 数量和描述 */}
+                <div className={styles.infoSection}>
+                  <div className={styles.infoItem}>
+                    <span className={styles.infoLabel}>QTY:</span>
+                    <span className={styles.infoValue}>{printData.qty}</span>
+                  </div>
+                  <div className={styles.infoItem}>
+                    <span className={styles.infoLabel}>描述:</span>
+                    <span className={styles.infoValue}>{printData.description}</span>
+                  </div>
+                  <div className={`${styles.infoItem} ${styles.fullWidth}`}>
+                    <span className={styles.infoLabel}>SN:</span>
+                    <span className={styles.infoValue}>{printData.sn}</span>
+                  </div>
                 </div>
               </div>
 
@@ -195,28 +199,31 @@ const PrintInner = () => {
               <div className={styles.qrCodeSection}>
                 <QRCode 
                   value={printData.qrCodeData}
-                  size={80}
+                  size={60}
                 />
               </div>
             </div>
 
             {/* 右侧区域 */}
             <div className={styles.rightSection}>
-              <div className={styles.rightItem}>
-                <div className={styles.rightLabel}>D/C:</div>
-                <div className={styles.rightValue}>{printData.dc}</div>
-              </div>
-              <div className={styles.rightItem}>
-                <div className={styles.rightLabel}>供应商代码:</div>
-                <div className={styles.rightValue}>{printData.supplierCode}</div>
-              </div>
-              <div className={styles.smallBarcodeWrapper}>
-                <Barcode 
-                  value={printData.smallBarcode}
-                  width={1.5}
-                  height={30}
-                  fontSize={8}
-                />
+              <div className={styles.rightSection1}>
+                <div className={styles.rightItem}>
+                  <div className={styles.rightLabel}>D/C:</div>
+                  <div className={styles.rightValue}>{printData.dc}</div>
+                </div>
+                <div className={styles.rightItem}>
+                  <div className={styles.rightLabel}>供应商代码:</div>
+                  <div className={styles.rightValue}>{printData.supplierCode}</div>
+                </div>
+                <div className={styles.smallBarcodeWrapper}>
+                  <Barcode 
+                    value={printData.smallBarcode}
+                    width={1}
+                    height={25}
+                    fontSize={7}
+                    displayValue={false}
+                  />
+                </div>
               </div>
             </div>
           </div>

@@ -8,6 +8,7 @@ interface BarcodeProps {
   height?: number
   fontSize?: number
   className?: string
+  displayValue?: boolean
 }
 
 const BarcodeComponent = ({ 
@@ -15,7 +16,8 @@ const BarcodeComponent = ({
   width = 1.5, 
   height = 50, 
   fontSize = 10,
-  className 
+  className,
+  displayValue = true
 }: BarcodeProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -26,7 +28,7 @@ const BarcodeComponent = ({
           format: "CODE128",
           width: width,
           height: height,
-          displayValue: true,
+          displayValue: displayValue,
           fontSize: fontSize,
           textAlign: "center",
           textPosition: "bottom",
@@ -41,7 +43,7 @@ const BarcodeComponent = ({
         console.error('生成条形码失败:', err)
       }
     }
-  }, [value, width, height, fontSize])
+  }, [value, width, height, fontSize, displayValue])
 
   return (
     <canvas 

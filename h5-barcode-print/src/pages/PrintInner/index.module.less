@@ -43,13 +43,16 @@
   padding: 20px;
   background: #fff;
   display: flex;
-  gap: 30px;
-  min-height: 350px;
   position: relative;
 }
 
 .leftSection {
+  display: flex;
+  flex-direction: column;
   flex: 1;
+  justify-content: space-between;
+}
+.leftSection1 {
   display: flex;
   flex-direction: column;
 }
@@ -121,17 +124,14 @@
 .rightSection {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  min-width: 150px;
   align-items: flex-end;
-  text-align: right;
   justify-content: center;
 }
 
 .rightItem {
   font-size: 10px;
   margin-bottom: 10px;
-  
+  display: flex;
   .rightLabel {
     font-weight: bold;
     color: #333;
@@ -196,51 +196,83 @@
   [class*="NavBar"] {
     display: none !important;
     visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* 重置所有容器的padding和margin */
+  body > div,
+  #root,
+  [class*="page"],
+  [class*="content"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  
+  /* 确保打印容器可见 */
+  .printInner {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    
   }
   
   /* 重置body样式 */
-  body {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+   
+  }
+  
+  * {
     margin: 0 !important;
     padding: 0 !important;
     background: white !important;
     font-family: Arial, sans-serif !important;
+    box-sizing: border-box !important;
   }
   
   /* 重置打印内容的样式 */
   .printContent {
-    position: static !important;
     width: 100% !important;
+    height: 100% !important;
     background: white !important;
     border-radius: 0 !important;
     margin: 0 !important;
-    padding: 10px !important;
     box-shadow: none !important;
     border: none !important;
-    display: block !important;
-    visibility: visible !important;
   }
   
   .preview {
-    border: 1px solid #ddd !important;
-    padding: 20px !important;
+    padding: 1mm !important;
     background: #fff !important;
     display: flex !important;
-    gap: 30px !important;
-    min-height: 350px !important;
-    position: relative !important;
+    gap: 1.5mm !important;
+    box-sizing: border-box !important;
     border-radius: 0 !important;
-    align-items: center !important;
+    border: none !important;
+    height: 50mm!important;
+    box-sizing: border-box;
   }
   
   .leftSection {
-    flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
+    // display: flex !important;
+    // flex-direction: column !important;
+    // justify-content: space-between;
+    // flex: 0!important;
+
+  }
+  .leftSection1 {
+    display: flex;
+    flex-direction: column;
   }
   
   .partNoSection {
-    margin-bottom: 15px !important;
-    font-size: 14px !important;
+    font-size: 6pt !important;
     font-weight: bold !important;
     
     .partNoLabel {
@@ -248,7 +280,7 @@
     }
     
     .barcodeWrapper {
-      margin-top: 8px !important;
+      margin-top: 0.3mm !important;
       display: flex !important;
       justify-content: flex-start !important;
     }
@@ -256,10 +288,10 @@
   
   .infoSection {
     .infoItem {
-      margin-bottom: 12px !important;
-      font-size: 14px !important;
+      font-size: 5pt !important;
       display: inline-block !important;
       max-width: 100% !important;
+      line-height: 1.1 !important;
       
       .infoLabel {
         font-weight: bold !important;
@@ -269,10 +301,6 @@
       
       .infoValue {
         color: #000 !important;
-        // display: inline !important;
-        // word-wrap: break-word !important;
-        // word-break: break-all !important;
-        // overflow-wrap: break-word !important;
       }
     }
     
@@ -290,24 +318,18 @@
   }
   
   .qrCodeSection {
-    margin-top: auto !important;
     display: flex !important;
     justify-content: flex-start !important;
-    padding-top: 10px !important;
   }
   
   .rightSection {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 20px !important;
-    min-width: 150px !important;
-    align-items: flex-end !important;
-    text-align: right !important;
+   
   }
   
   .rightItem {
-    font-size: 14px !important;
-    margin-bottom: 10px !important;
+    font-size: 5pt !important;
+    margin-bottom: 0.3mm !important;
+    line-height: 1.1 !important;
     
     .rightLabel {
       font-weight: bold !important;
@@ -337,7 +359,7 @@
   
   /* 打印页面设置 */
   @page {
-    margin: 5mm !important;
-    size: A4 !important;
+    margin: 0 !important;
+    size: 77mm 50mm !important;
   }
 }

@@ -210,6 +210,7 @@ export function scanProjectCode(data: {
  * 扫内包装码得到外包装码打印信息
  */
 export function scanNbzcode(nbzcode: string): Promise<{
+  code09: string
   id: string
   materialCode: string
   nameModel: string

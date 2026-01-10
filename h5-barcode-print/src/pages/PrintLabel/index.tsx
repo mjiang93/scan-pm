@@ -22,6 +22,7 @@ interface PrintData {
   storageLocation: string
   sn: string
   qrCodeData: string
+  code09: string
 }
 
 const PrintLabel = () => {
@@ -65,7 +66,8 @@ const PrintLabel = () => {
           batchNumber: detail.codeSN || '', // SN码作为批号
           storageLocation: detail.saveClean || '', // 存储/清洁
           sn: detail.codeSN || '', // 直接使用返回的SN码
-          qrCodeData: `Material:${detail.materialCode || ''};QTY:${detail.cnt || 0};Supplier:${detail.supplierCode || ''};Date:${deliveryDate}`
+          code09: detail.code09 || '', // 直接使用返回的SN码
+          qrCodeData: detail.codeSN
         }
         setPrintData(mappedData)
       }
@@ -115,7 +117,7 @@ const PrintLabel = () => {
         })
       }
       
-      Toast.show({ icon: 'success', content: '打印任务已发送' })
+      // Toast.show({ icon: 'success', content: '打印任务已发送' })
       
     } catch (error) {
       console.error('打印失败:', error)
@@ -166,13 +168,13 @@ const PrintLabel = () => {
         {/* 打印内容区域 */}
         <div ref={printRef} className={styles.printContent}>
           <div className={styles.preview}>
-            {/* 标题 */}
-            <div className={styles.titleSection}>
-              <h2>{printData.title}</h2>
-            </div>
-
             {/* 表格内容 */}
             <table className={styles.labelTable}>
+              <thead>
+                <tr>
+                  <th colSpan={4} className={styles.tableTitle}>{printData.title}</th>
+                </tr>
+              </thead>
               <tbody>
                 <tr>
                   <td className={styles.labelCell}>物料编码</td>
@@ -196,7 +198,9 @@ const PrintLabel = () => {
                   <td className={styles.labelCell}>数量</td>
                   <td className={styles.valueCell}>{printData.qty}</td>
                   <td className={styles.labelCell}>单位</td>
-                  <td className={styles.valueCell}>{printData.unit}</td>
+                  <td className={styles.valueCell}>
+                    {/* {printData.unit} */}
+                    PCS</td>
                 </tr>
                 <tr>
                   <td className={styles.labelCell}>供货商代码</td>
@@ -214,7 +218,7 @@ const PrintLabel = () => {
                   <td className={styles.labelCell}>批号</td>
                   <td className={styles.valueCell} colSpan={3}>
                     <div className={styles.batchWrapper}>
-                      {printData.batchNumber}
+                      {printData.code09}
                       {/* <Barcode 
                         value={printData.batchNumber}
                         width={1.5}
