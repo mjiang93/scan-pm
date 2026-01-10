@@ -227,6 +227,7 @@ const Scan = () => {
                 disabled={loading}
                 className={styles.scanInput}
                 onEnterPress={handleManualSubmit}
+                maxLength={type === 'mom' ? 15 : undefined}
               />
               <Button 
                 color="primary" 

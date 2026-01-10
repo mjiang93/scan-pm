@@ -199,8 +199,9 @@ const PrintLabel = () => {
                   <td className={styles.valueCell}>{printData.qty}</td>
                   <td className={styles.labelCell}>单位</td>
                   <td className={styles.valueCell}>
-                    {/* {printData.unit} */}
-                    PCS</td>
+                    {printData.unit}
+                    {/* PCS */}
+                    </td>
                 </tr>
                 <tr>
                   <td className={styles.labelCell}>供货商代码</td>

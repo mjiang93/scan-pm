@@ -50,7 +50,7 @@ const PrintBody = () => {
           rev: btPrintData.revCode || '', // Rev使用revCode
           model: btPrintData.modelCode || '', // Model使用modelCode
           sn: btPrintData.codeSN || '', // SN使用codeSN
-          qrCodeData: btPrintData.codeSN,
+          qrCodeData: btPrintData.codeSNFull,
           barcodes: btPrintData.fjList || [] // 条形码列表
         }
         setPrintData(mappedData)
