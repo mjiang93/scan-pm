@@ -335,7 +335,7 @@ const BarcodeEdit = () => {
             name="factoryCode"
             label="出厂码"
           >
-            <Input placeholder="请输入出厂码" />
+            <Input placeholder="请输入出厂码" maxLength={15} />
           </Form.Item>
 
           {/* SN码 - 非必填 */}
