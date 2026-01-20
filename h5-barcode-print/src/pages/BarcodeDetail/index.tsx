@@ -300,7 +300,7 @@ const BarcodeDetail = () => {
   }
 
   const handlePrint = () => {
-    Toast.show({ content: '开始打印...' })
+    // Toast.show({ content: '开始打印...' })
     // 这里可以调用打印接口
   }
 

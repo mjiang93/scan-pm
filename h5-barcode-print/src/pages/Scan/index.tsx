@@ -114,6 +114,12 @@ const Scan = () => {
       return
     }
     
+    // 如果是MOM出厂码，校验必须是15位
+    if (type === 'mom' && manualCode.length !== 15) {
+      Toast.show({ content: 'MOM出厂码必须是15位' })
+      return
+    }
+    
     // 如果是MOM出厂码绑定，直接返回详情页面，使用 replace 清除扫码页面历史
     if (type === 'mom' && id) {
       const typeParam = returnType ? `&type=${encodeURIComponent(returnType)}` : ''

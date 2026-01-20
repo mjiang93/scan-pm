@@ -4,7 +4,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button, Toast, ErrorBlock } from 'antd-mobile'
 import { PageContainer, QRCode, Barcode, Loading } from '@/components'
 import { getBarcodeDetail, updatePrintStatus, getBtPrintInfo } from '@/services/barcode'
+import { batchPrint } from '@/services/printer'
+import type { BatchPrintRequest } from '@/types/printer'
 import { useUserStore } from '@/stores'
+import { usePrinterSelector } from '@/hooks'
+import { domToBase64 } from '@/utils/domToImage'
 import styles from './index.module.less'
 
 interface PrintData {
@@ -27,6 +31,7 @@ const PrintBody = () => {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const printRef = useRef<HTMLDivElement>(null)
   const { userInfo } = useUserStore()
+  const { selectPrinter, popup } = usePrinterSelector()
 
   const loadPrintData = async () => {
     setLoading(true)
@@ -55,9 +60,9 @@ const PrintBody = () => {
         }
         setPrintData(mappedData)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('加载打印数据失败:', error)
-      const errMsg = error?.message || error?.msg || '加载打印数据失败'
+      const errMsg = (error as { message?: string; msg?: string })?.message || (error as { message?: string; msg?: string })?.msg || '加载打印数据失败'
       setErrorMessage(errMsg)
       Toast.show({
         icon: 'fail',
@@ -78,6 +83,193 @@ const PrintBody = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
+  // 创建用于打印的QRCode区域DOM（382px x 48px）
+  const createPrintQRSection = (): HTMLElement => {
+    // 克隆现有的QRCode区域
+    const originalSection = document.querySelector(`.${styles.qrSection}`) as HTMLElement
+    if (!originalSection) {
+      throw new Error('找不到QRCode区域')
+    }
+    
+    const container = originalSection.cloneNode(true) as HTMLElement
+    
+    // 直接使用打印机分辨率: 48mm x 6mm @ 203 DPI = 382px x 48px
+    const width = 382
+    const height = 48
+    
+    container.style.cssText = `
+      width: ${width}px;
+      height: ${height}px;
+      background: white;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 4px;
+      box-sizing: border-box;
+      gap: 4px;
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      border: none;
+      border-radius: 0;
+      margin: 0;
+    `
+    
+    // 调整QRCode大小 - 5mm @ 203 DPI ≈ 40px
+    const qrCode = container.querySelector(`.${styles.qrCode}`) as HTMLElement
+    if (qrCode) {
+      qrCode.style.cssText = `
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+      `
+      
+      // 复制canvas内容
+      const originalCanvas = originalSection.querySelector(`.${styles.qrCode} canvas`) as HTMLCanvasElement
+      const clonedCanvas = container.querySelector(`.${styles.qrCode} canvas`) as HTMLCanvasElement
+      if (originalCanvas && clonedCanvas) {
+        // 复制canvas的像素数据
+        const ctx = clonedCanvas.getContext('2d')
+        if (ctx) {
+          clonedCanvas.width = originalCanvas.width
+          clonedCanvas.height = originalCanvas.height
+          ctx.drawImage(originalCanvas, 0, 0)
+        }
+        
+        // 调整显示大小
+        clonedCanvas.style.width = '40px'
+        clonedCanvas.style.height = '40px'
+        clonedCanvas.style.display = 'block'
+      }
+    }
+    
+    // 调整信息区域
+    const qrInfo = container.querySelector(`.${styles.qrInfo}`) as HTMLElement
+    if (qrInfo) {
+      qrInfo.style.cssText = `
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 2px;
+        width: 100%;
+        min-width: 0;
+      `
+      
+      // 调整所有信息行 - 使用更大的字体以适配382px宽度
+      const rows = qrInfo.querySelectorAll(`.${styles.qrInfoRow}`)
+      rows.forEach((row) => {
+        const rowElement = row as HTMLElement
+        rowElement.style.cssText = `
+          display: flex;
+          flex-wrap: nowrap;
+          align-items: center;
+          margin: 0;
+          font-size: 9px;
+          line-height: 1.2;
+          font-family: Arial, sans-serif;
+        `
+        
+        // 调整标签
+        const labels = rowElement.querySelectorAll(`.${styles.qrLabel}`)
+        labels.forEach((label) => {
+          const labelElement = label as HTMLElement
+          labelElement.style.cssText = `
+            font-weight: bold;
+            color: #000;
+            display: inline-block;
+            flex-shrink: 0;
+            margin-right: 2px;
+            font-size: 9px;
+          `
+        })
+        
+        // 调整值
+        const values = rowElement.querySelectorAll(`.${styles.qrValue}`)
+        values.forEach((value) => {
+          const valueElement = value as HTMLElement
+          valueElement.style.cssText = `
+            color: #000;
+            display: inline-block;
+            white-space: nowrap;
+            margin-right: 6px;
+            font-size: 9px;
+          `
+        })
+        
+        // 调整label1容器
+        const label1s = rowElement.querySelectorAll(`.${styles.qrLabel1}`)
+        label1s.forEach((label1) => {
+          const label1Element = label1 as HTMLElement
+          label1Element.style.cssText = 'display: inline-flex; align-items: center; margin-right: 4px;'
+        })
+      })
+    }
+    
+    return container
+  }
+  
+  // 创建用于打印的条形码区域DOM（382px x 48px）
+  const createPrintBarcodeSection = (index: number): HTMLElement => {
+    // 克隆现有的条形码区域
+    const barcodeSections = document.querySelectorAll(`.${styles.barcodeSection}`)
+    const originalSection = barcodeSections[index] as HTMLElement
+    if (!originalSection) {
+      throw new Error(`找不到第${index}个条形码区域`)
+    }
+    
+    const container = originalSection.cloneNode(true) as HTMLElement
+    
+    // 直接使用打印机分辨率: 48mm x 6mm @ 203 DPI = 382px x 48px
+    const width = 382
+    const height = 48
+    
+    container.style.cssText = `
+      width: ${width}px;
+      height: ${height}px;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      box-sizing: border-box;
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      border: none;
+      border-radius: 0;
+      text-align: center;
+      margin: 0;
+    `
+    
+    // 复制canvas内容
+    const originalCanvas = originalSection.querySelector('canvas') as HTMLCanvasElement
+    const clonedCanvas = container.querySelector('canvas') as HTMLCanvasElement
+    if (originalCanvas && clonedCanvas) {
+      // 复制canvas的像素数据
+      const ctx = clonedCanvas.getContext('2d')
+      if (ctx) {
+        clonedCanvas.width = originalCanvas.width
+        clonedCanvas.height = originalCanvas.height
+        ctx.drawImage(originalCanvas, 0, 0)
+      }
+      
+      // 调整显示大小 - 46mm x 5mm @ 203 DPI ≈ 366px x 40px
+      clonedCanvas.style.maxWidth = '366px'
+      clonedCanvas.style.maxHeight = '40px'
+      clonedCanvas.style.width = 'auto'
+      clonedCanvas.style.height = 'auto'
+      clonedCanvas.style.display = 'block'
+      clonedCanvas.style.margin = '0 auto'
+    }
+    
+    return container
+  }
+
   const handlePrint = async () => {
     if (!printData) {
       Toast.show({ content: '没有可打印的数据' })
@@ -85,11 +277,82 @@ const PrintBody = () => {
     }
 
     try {
-      // 等待Canvas渲染完成
-      await new Promise(resolve => setTimeout(resolve, 200))
+      // 选择打印机
+      const selectedPrinter = await selectPrinter()
       
-      // 调用浏览器打印功能
-      window.print()
+      if (!selectedPrinter) {
+        return // 用户取消选择
+      }
+
+      Toast.show({
+        icon: 'loading',
+        content: `正在准备打印数据...`,
+        duration: 0
+      })
+
+      // 等待Canvas渲染完成
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // 准备批量打印请求数组
+      const printRequests: BatchPrintRequest[] = []
+      
+      // 1. 处理QRCode区域（包含二维码和信息）
+      const qrPrintElement = createPrintQRSection()
+      document.body.appendChild(qrPrintElement)
+      
+      try {
+        const qrBase64 = await domToBase64(qrPrintElement, 48, 6)
+        printRequests.push({
+          barcodeId: parseInt(id) || 0,
+          copies: 1,
+          ip: selectedPrinter.ip,
+          operator: userInfo?.userName || 'unknown',
+          port: selectedPrinter.port,
+          printData: qrBase64,
+          printType: 'BODY',
+          printerId: selectedPrinter.printerId,
+          priority: selectedPrinter.priority || 5
+        })
+      } finally {
+        document.body.removeChild(qrPrintElement)
+      }
+      
+      // 2. 处理每个条形码
+      for (let i = 0; i < printData.barcodes.length; i++) {
+        const barcodePrintElement = createPrintBarcodeSection(i)
+        document.body.appendChild(barcodePrintElement)
+        
+        try {
+          const barcodeBase64 = await domToBase64(barcodePrintElement, 48, 6)
+          printRequests.push({
+            barcodeId: parseInt(id) || 0,
+            copies: 1,
+            ip: selectedPrinter.ip,
+            operator: userInfo?.userName || 'unknown',
+            port: selectedPrinter.port,
+            printData: barcodeBase64,
+            printType: 'BODY',
+            printerId: selectedPrinter.printerId,
+            priority: selectedPrinter.priority || 5
+          })
+        } finally {
+          document.body.removeChild(barcodePrintElement)
+        }
+      }
+
+      Toast.show({
+        icon: 'loading',
+        content: `正在使用 ${selectedPrinter.printerName} 打印...`,
+        duration: 0
+      })
+
+      // 调用批量打印接口
+      await batchPrint(printRequests)
+      
+      Toast.show({
+        icon: 'success',
+        content: '打印任务已发送'
+      })
       
       // 更新打印状态
       if (id) {
@@ -102,11 +365,9 @@ const PrintBody = () => {
         })
       }
       
-      // Toast.show({ icon: 'success', content: '打印任务已发送' })
-      
     } catch (error) {
       console.error('打印失败:', error)
-      // Toast.show({ icon: 'fail', content: '打印失败，请重试' })
+      Toast.show({ icon: 'fail', content: '打印失败，请重试' })
     }
   }
 
@@ -211,6 +472,9 @@ const PrintBody = () => {
           </Button>
         </div>
       </div>
+      
+      {/* 打印机选择弹窗 */}
+      {popup}
     </PageContainer>
   )
 }

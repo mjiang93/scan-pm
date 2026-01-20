@@ -1,17 +1,432 @@
 // 打印机接口服务
-import { request } from './request'
 import type { Printer } from '@/types/printer'
+import { request } from './request'
+
+// Mock 数据
+const MOCK_PRINTERS: Printer[] = [
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.22.34",
+    isEnabled: true,
+    lastHeartbeat: "1768805652000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_22_34_9100",
+    printerName: "MOM打印机-172.16.22.34",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.44.139",
+    isEnabled: true,
+    lastHeartbeat: "1768805652000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_44_139_9100",
+    printerName: "MOM打印机-172.16.44.139",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.44.149",
+    isEnabled: true,
+    lastHeartbeat: "1768805652000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_44_149_9100",
+    printerName: "MOM打印机-172.16.44.149",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.44.206",
+    isEnabled: true,
+    lastHeartbeat: "1768805652000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_44_206_9100",
+    printerName: "MOM打印机-172.16.44.206",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.44.208",
+    isEnabled: true,
+    lastHeartbeat: "1768805652000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_44_208_9100",
+    printerName: "MOM打印机-172.16.44.208",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.44.209",
+    isEnabled: true,
+    lastHeartbeat: "1768805652000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_44_209_9100",
+    printerName: "MOM打印机-172.16.44.209",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.44.210",
+    isEnabled: true,
+    lastHeartbeat: "1768805652000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_44_210_9100",
+    printerName: "MOM打印机-172.16.44.210",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.44.211",
+    isEnabled: true,
+    lastHeartbeat: "1768805652000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_44_211_9100",
+    printerName: "MOM打印机-172.16.44.211",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.44.229",
+    isEnabled: true,
+    lastHeartbeat: "1768805653000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_44_229_9100",
+    printerName: "MOM打印机-172.16.44.229",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.44.253",
+    isEnabled: true,
+    lastHeartbeat: "1768805653000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_44_253_9100",
+    printerName: "MOM打印机-172.16.44.253",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.44.88",
+    isEnabled: true,
+    lastHeartbeat: "1768805651000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_44_88_9100",
+    printerName: "MOM打印机-172.16.44.88",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.45.203",
+    isEnabled: true,
+    lastHeartbeat: "1768805653000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_45_203_9100",
+    printerName: "MOM打印机-172.16.45.203",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.45.9",
+    isEnabled: true,
+    lastHeartbeat: "1768805651000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_45_9_9100",
+    printerName: "MOM打印机-172.16.45.9",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "MOM",
+    ip: "172.16.45.90",
+    isEnabled: true,
+    lastHeartbeat: "1768805651000",
+    location: "MOM车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_45_90_9100",
+    printerName: "MOM打印机-172.16.45.90",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "亚威",
+    ip: "172.16.45.127",
+    isEnabled: true,
+    lastHeartbeat: "1768805653000",
+    location: "亚威车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_45_127_9100",
+    printerName: "亚威打印机-172.16.45.127",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "亚威",
+    ip: "172.16.45.200",
+    isEnabled: true,
+    lastHeartbeat: "1768805653000",
+    location: "亚威车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_45_200_9100",
+    printerName: "亚威打印机-172.16.45.200",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "亚威",
+    ip: "172.16.45.202",
+    isEnabled: true,
+    lastHeartbeat: "1768805653000",
+    location: "亚威车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_45_202_9100",
+    printerName: "亚威打印机-172.16.45.202",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "亚威",
+    ip: "172.16.45.96",
+    isEnabled: true,
+    lastHeartbeat: "1768805651000",
+    location: "亚威车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_45_96_9100",
+    printerName: "亚威打印机-172.16.45.96",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "其他",
+    ip: "172.16.16.17",
+    isEnabled: true,
+    lastHeartbeat: "1768805651000",
+    location: "其他车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_16_17_9100",
+    printerName: "其他打印机-172.16.16.17",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "其他",
+    ip: "172.16.16.196",
+    isEnabled: true,
+    lastHeartbeat: "1768805651000",
+    location: "其他车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_16_196_9100",
+    printerName: "其他打印机-172.16.16.196",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "其他",
+    ip: "172.16.18.197",
+    isEnabled: true,
+    lastHeartbeat: "1768805651000",
+    location: "其他车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_18_197_9100",
+    printerName: "其他打印机-172.16.18.197",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  },
+  {
+    connectionType: "NETWORK",
+    department: "其他",
+    ip: "172.16.18.240",
+    isEnabled: true,
+    lastHeartbeat: "1768805652000",
+    location: "其他车间",
+    model: "TOSHIBA BA410T",
+    paperHeight: 50,
+    paperWidth: 75,
+    port: 9100,
+    printerId: "PRINTER_172_16_18_240_9100",
+    printerName: "其他打印机-172.16.18.240",
+    priority: 5,
+    remark: "",
+    status: "ONLINE",
+    supportCut: true
+  }
+]
 
 /**
- * 获取打印机列表
+ * 获取可用打印机列表
+ * 支持 Mock 模式：
+ * 1. 通过环境变量 VITE_USE_MOCK_PRINTERS=true 启用
+ * 2. 通过 localStorage 设置 'useMockPrinters' 为 'true' 启用
  */
-export function getPrinterList(): Promise<Printer[]> {
-  return request.get<Printer[]>('/printer/list')
+export async function getAvailablePrinters(): Promise<Printer[]> {
+  // 检查是否启用 Mock 模式（环境变量或 localStorage）
+  const useMock = 
+    import.meta.env.VITE_USE_MOCK_PRINTERS === 'true' || 
+    localStorage.getItem('useMockPrinters') === 'true'
+  
+  if (useMock) {
+    console.log('使用 Mock 打印机数据')
+    // 模拟网络延迟
+    await new Promise(resolve => setTimeout(resolve, 300))
+    return MOCK_PRINTERS
+  }
+  
+  return request.get<Printer[]>('/printer/available')
 }
 
 /**
- * 获取打印机状态
+ * 批量打印接口
  */
-export function getPrinterStatus(printerId: string): Promise<Printer> {
-  return request.get<Printer>(`/printer/${printerId}/status`)
+export async function batchPrint(printRequests: import('@/types/printer').BatchPrintRequest[]): Promise<import('@/types/printer').BatchPrintResponse> {
+  return request.post<import('@/types/printer').BatchPrintResponse>('/printer/batch-print', printRequests)
 }
