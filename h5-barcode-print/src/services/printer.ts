@@ -407,8 +407,9 @@ const MOCK_PRINTERS: Printer[] = [
  * 支持 Mock 模式：
  * 1. 通过环境变量 VITE_USE_MOCK_PRINTERS=true 启用
  * 2. 通过 localStorage 设置 'useMockPrinters' 为 'true' 启用
+ * @param department - 部门参数，用于筛选打印机
  */
-export async function getAvailablePrinters(): Promise<Printer[]> {
+export async function getAvailablePrinters(department?: number): Promise<Printer[]> {
   // 检查是否启用 Mock 模式（环境变量或 localStorage）
   const useMock = 
     import.meta.env.VITE_USE_MOCK_PRINTERS === 'true' || 
@@ -421,12 +422,28 @@ export async function getAvailablePrinters(): Promise<Printer[]> {
     return MOCK_PRINTERS
   }
   
-  return request.get<Printer[]>('/printer/available')
+  const params = department ? { department } : {}
+  const response = await request.get<{ result: Printer[]; total: number; empty: boolean }>('/printer/available', { params })
+  return response.result || []
 }
 
 /**
- * 批量打印接口
+ * 批量打印接口（旧接口）
  */
 export async function batchPrint(printRequests: import('@/types/printer').BatchPrintRequest[]): Promise<import('@/types/printer').BatchPrintResponse> {
   return request.post<import('@/types/printer').BatchPrintResponse>('/printer/batch-print', printRequests)
+}
+
+/**
+ * 批量打印接口（新接口 - 48x6mm）
+ */
+export async function batchPrintImage48x6(printRequest: import('@/types/printer').BatchPrintImageRequest): Promise<import('@/types/printer').BatchPrintResponse> {
+  return request.post<import('@/types/printer').BatchPrintResponse>('/printer/print/batch/image/48x6', printRequest)
+}
+
+/**
+ * 批量打印接口（新接口 - 100x70mm）
+ */
+export async function batchPrintImage100x70(printRequest: import('@/types/printer').BatchPrintImageRequest): Promise<import('@/types/printer').BatchPrintResponse> {
+  return request.post<import('@/types/printer').BatchPrintResponse>('/printer/print/batch/image/100x70', printRequest)
 }

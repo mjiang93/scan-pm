@@ -5,4 +5,5 @@ export * from './validate'
 export * from './url'
 export * from './errorHandler'
 export * from './domToImage'
+export * from './fullscreen'
 

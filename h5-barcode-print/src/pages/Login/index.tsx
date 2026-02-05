@@ -69,8 +69,8 @@ const Login = () => {
         className={styles.form}
         onFinish={handleSubmit}
         initialValues={{
-          username: 'capo', // 默认测试用户名
-          password: '123456' // 默认测试密码
+          username: '', // 默认测试用户名
+          password: '' // 默认测试密码
         }}
         footer={
           <Button

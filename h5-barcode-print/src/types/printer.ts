@@ -33,7 +33,7 @@ export interface PrinterListResponse {
   success: boolean
 }
 
-// 批量打印请求参数
+// 批量打印请求参数（旧接口）
 export interface BatchPrintRequest {
   barcodeId: number
   copies: number
@@ -52,4 +52,26 @@ export interface BatchPrintResponse {
   data: boolean
   msg: string
   success: boolean
+}
+
+// 新批量打印接口 - 图片项
+export interface BatchPrintImageItem {
+  copies: number
+  data: string
+  imageBase64: string
+  imageFormat: string
+  imageName: string
+  sortOrder: number
+}
+
+// 新批量打印接口 - 请求参数
+export interface BatchPrintImageRequest {
+  images: BatchPrintImageItem[]
+  ip: string
+  operator: string
+  port: number
+  printStrategy: string
+  printerId: string
+  remark: string
+  saveTempFile: boolean
 }

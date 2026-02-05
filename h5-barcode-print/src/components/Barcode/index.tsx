@@ -24,7 +24,7 @@ const BarcodeComponent = ({
   useEffect(() => {
     if (canvasRef.current && value) {
       try {
-        // 使用6倍DPI进行超高清渲染，解决小尺寸条形码失真问题
+        // 使用2倍DPI进行高清渲染，匹配打印分辨率
         const scaleFactor = 2
         
         JsBarcode(canvasRef.current, value, {

@@ -3,12 +3,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button, Toast, ErrorBlock } from 'antd-mobile'
 import { PageContainer, QRCode, Barcode, Loading } from '@/components'
-import { scanBtcode, updatePrintStatus } from '@/services/barcode'
-import { batchPrint } from '@/services/printer'
-import type { BatchPrintRequest } from '@/types/printer'
+import { scanBtcode, updatePrintStatus, printNbz } from '@/services/barcode'
 import { useUserStore } from '@/stores'
 import { usePrinterSelector } from '@/hooks'
-import { domToBase64 } from '@/utils/domToImage'
 import styles from './index.module.less'
 
 interface PrintData {
@@ -90,166 +87,6 @@ const PrintInner = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [btcode])
 
-  // 创建用于打印的DOM（100mm x 70mm @ 203 DPI = 797px x 551px）
-  const createPrintElement = (): HTMLElement => {
-    const originalPreview = document.querySelector(`.${styles.preview}`) as HTMLElement
-    if (!originalPreview) {
-      throw new Error('找不到打印预览区域')
-    }
-    
-    const container = originalPreview.cloneNode(true) as HTMLElement
-    
-    // 100mm x 70mm @ 203 DPI = 797px x 551px
-    const width = 797
-    const height = 551
-    
-    container.style.cssText = `
-      width: ${width}px;
-      height: ${height}px;
-      background: white;
-      display: flex;
-      padding: 12px;
-      box-sizing: border-box;
-      gap: 8px;
-      position: absolute;
-      left: -9999px;
-      top: 0;
-      border: none;
-      border-radius: 0;
-      margin: 0;
-    `
-    
-    // 复制所有canvas内容
-    const originalCanvases = originalPreview.querySelectorAll('canvas')
-    const clonedCanvases = container.querySelectorAll('canvas')
-    
-    originalCanvases.forEach((originalCanvas, index) => {
-      const clonedCanvas = clonedCanvases[index] as HTMLCanvasElement
-      if (clonedCanvas) {
-        const ctx = clonedCanvas.getContext('2d')
-        if (ctx) {
-          clonedCanvas.width = originalCanvas.width
-          clonedCanvas.height = originalCanvas.height
-          ctx.drawImage(originalCanvas, 0, 0)
-        }
-      }
-    })
-    
-    // 调整左侧区域
-    const leftSection = container.querySelector(`.${styles.leftSection}`) as HTMLElement
-    if (leftSection) {
-      leftSection.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        justify-content: space-between;
-      `
-    }
-    
-    // 调整PartNo区域
-    const partNoSection = container.querySelector(`.${styles.partNoSection}`) as HTMLElement
-    if (partNoSection) {
-      partNoSection.style.cssText = `
-        margin-bottom: 8px;
-        font-size: 18px;
-        font-weight: bold;
-      `
-      
-      const partNoLabel = partNoSection.querySelector(`.${styles.partNoLabel}`) as HTMLElement
-      if (partNoLabel) {
-        partNoLabel.style.cssText = 'color: #000; font-size: 18px;'
-      }
-      
-      const barcodeWrapper = partNoSection.querySelector(`.${styles.barcodeWrapper}`) as HTMLElement
-      if (barcodeWrapper) {
-        barcodeWrapper.style.cssText = 'margin-top: 4px; display: flex;'
-      }
-    }
-    
-    // 调整信息区域
-    const infoSection = container.querySelector(`.${styles.infoSection}`) as HTMLElement
-    if (infoSection) {
-      infoSection.style.cssText = 'display: flex; flex-direction: column;'
-      
-      const infoItems = infoSection.querySelectorAll(`.${styles.infoItem}`)
-      infoItems.forEach((item) => {
-        const itemElement = item as HTMLElement
-        itemElement.style.cssText = `
-          margin-bottom: 8px;
-          font-size: 16px;
-          display: inline-block;
-          max-width: 100%;
-        `
-        
-        const label = itemElement.querySelector(`.${styles.infoLabel}`) as HTMLElement
-        if (label) {
-          label.style.cssText = 'font-weight: bold; color: #000; display: inline; font-size: 16px;'
-        }
-        
-        const value = itemElement.querySelector(`.${styles.infoValue}`) as HTMLElement
-        if (value) {
-          value.style.cssText = 'color: #000; display: inline; word-wrap: break-word; font-size: 16px;'
-        }
-      })
-    }
-    
-    // 调整二维码区域
-    const qrCodeSection = container.querySelector(`.${styles.qrCodeSection}`) as HTMLElement
-    if (qrCodeSection) {
-      qrCodeSection.style.cssText = `
-        margin-top: auto;
-        display: flex;
-        justify-content: flex-start;
-        padding-top: 8px;
-      `
-      
-      const qrCanvas = qrCodeSection.querySelector('canvas') as HTMLCanvasElement
-      if (qrCanvas) {
-        qrCanvas.style.width = '140px'
-        qrCanvas.style.height = '140px'
-      }
-    }
-    
-    // 调整右侧区域
-    const rightSection = container.querySelector(`.${styles.rightSection}`) as HTMLElement
-    if (rightSection) {
-      rightSection.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        justify-content: center;
-      `
-      
-      const rightItems = rightSection.querySelectorAll(`.${styles.rightItem}`)
-      rightItems.forEach((item) => {
-        const itemElement = item as HTMLElement
-        itemElement.style.cssText = `
-          font-size: 16px;
-          margin-bottom: 12px;
-          display: flex;
-          align-items: center;
-        `
-        
-        const label = itemElement.querySelector(`.${styles.rightLabel}`) as HTMLElement
-        if (label) {
-          label.style.cssText = 'font-weight: bold; color: #000; display: inline-block; font-size: 16px;'
-        }
-        
-        const value = itemElement.querySelector(`.${styles.rightValue}`) as HTMLElement
-        if (value) {
-          value.style.cssText = 'color: #000; display: inline-block; font-size: 16px;'
-        }
-      })
-      
-      const smallBarcodeWrapper = rightSection.querySelector(`.${styles.smallBarcodeWrapper}`) as HTMLElement
-      if (smallBarcodeWrapper) {
-        smallBarcodeWrapper.style.cssText = 'display: flex; justify-content: flex-end;'
-      }
-    }
-    
-    return container
-  }
-
   const handlePrint = async () => {
     if (!printData) {
       Toast.show({ content: '没有可打印的数据' })
@@ -257,8 +94,8 @@ const PrintInner = () => {
     }
 
     try {
-      // 选择打印机
-      const selectedPrinter = await selectPrinter()
+      // 选择打印机 - 内包装页传 department=600
+      const selectedPrinter = await selectPrinter(600)
       
       if (!selectedPrinter) {
         return // 用户取消选择
@@ -266,60 +103,37 @@ const PrintInner = () => {
 
       Toast.show({
         icon: 'loading',
-        content: `正在准备打印数据...`,
+        content: `正在使用 ${selectedPrinter.printerName} 打印...`,
         duration: 0
       })
 
-      // 等待Canvas渲染完成
-      await new Promise(resolve => setTimeout(resolve, 300))
+      // 调用内包装码打印接口
+      await printNbz({
+        btPrintCnt: 0, // 本体码打印状态 0-不打印
+        codeSn: printData.qrCodeData, // 使用完整的 codeSN
+        id: parseInt(recordId), // 主键
+        nbzPrintCnt: 1, // 内包装码打印状态 1-打印
+        operator: userInfo?.userName || 'unknown', // 操作人
+        printerId: selectedPrinter.printerId, // 打印机ID
+        wbzPrintCnt: 0 // 送货外包装码打印 0-不打印
+      })
       
-      // 创建打印元素
-      const printElement = createPrintElement()
-      document.body.appendChild(printElement)
+      Toast.show({
+        icon: 'success',
+        content: '打印任务已发送'
+      })
       
-      try {
-        // 转换为base64图片（100mm x 70mm）
-        const base64Image = await domToBase64(printElement, 100, 70)
-        
-        // 准备打印请求
-        const printRequest: BatchPrintRequest = {
-          barcodeId: parseInt(recordId) || 0,
-          copies: 1,
-          ip: selectedPrinter.ip,
+      // 更新打印状态
+      if (recordId) {
+        await updatePrintStatus({
+          id: parseInt(recordId),
           operator: userInfo?.userName || 'unknown',
-          port: selectedPrinter.port,
-          printData: base64Image,
-          printType: 'INNER',
-          printerId: selectedPrinter.printerId,
-          priority: selectedPrinter.priority || 5
-        }
-
-        Toast.show({
-          icon: 'loading',
-          content: `正在使用 ${selectedPrinter.printerName} 打印...`,
-          duration: 0
+          nbzPrintCnt: 1,
+          btPrintCnt: 0,
+          wbzPrintCnt: 0,
+          codeSn: printData.qrCodeData,
+          printerId: selectedPrinter.printerId, // 打印机ID
         })
-
-        // 调用批量打印接口
-        await batchPrint([printRequest])
-        
-        Toast.show({
-          icon: 'success',
-          content: '打印任务已发送'
-        })
-        
-        // 更新打印状态
-        if (recordId) {
-          await updatePrintStatus({
-            id: parseInt(recordId),
-            operator: userInfo?.userName || 'unknown',
-            nbzPrintCnt: 1,
-            btPrintCnt: 0,
-            wbzPrintCnt: 0
-          })
-        }
-      } finally {
-        document.body.removeChild(printElement)
       }
       
     } catch (error) {

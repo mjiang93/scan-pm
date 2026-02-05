@@ -5,7 +5,7 @@ import type { Printer } from '@/types/printer'
 import styles from './usePrinterSelector.module.less'
 
 interface UsePrinterSelectorReturn {
-  selectPrinter: () => Promise<Printer | null>
+  selectPrinter: (department?: number) => Promise<Printer | null>
   popup: React.ReactNode
 }
 
@@ -14,10 +14,10 @@ export const usePrinterSelector = (): UsePrinterSelectorReturn => {
   const [visible, setVisible] = useState(false)
   const [resolveRef, setResolveRef] = useState<((value: Printer | null) => void) | null>(null)
 
-  const selectPrinter = async (): Promise<Printer | null> => {
+  const selectPrinter = async (department?: number): Promise<Printer | null> => {
     try {
       // 获取可用打印机列表
-      const printerList = await getAvailablePrinters()
+      const printerList = await getAvailablePrinters(department)
       
       if (!printerList || printerList.length === 0) {
         Toast.show({

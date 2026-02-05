@@ -8,11 +8,14 @@ import {
   AppstoreOutline 
 } from 'antd-mobile-icons'
 import { useUserStore } from '@/stores'
+import { useFullscreen } from '@/hooks'
+import { FullscreenIcon } from '@/components'
 import styles from './index.module.less'
 
 const Home = () => {
   const navigate = useNavigate()
   const { userInfo, logout } = useUserStore()
+  const { isFullscreen, toggleFullscreen } = useFullscreen()
 
   const handleLogout = () => {
     logout()
@@ -51,6 +54,11 @@ const Home = () => {
     <div className={styles.home}>
       {/* 顶部区域 */}
       <div className={styles.header}>
+        {/* 全屏切换按钮 */}
+        <div className={styles.fullscreenBtn} onClick={toggleFullscreen}>
+          <FullscreenIcon isFullscreen={isFullscreen} size={22} />
+        </div>
+        
         <div className={styles.logo}>
           <div className={styles.logoIcon}>📦</div>
         </div>

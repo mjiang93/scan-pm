@@ -135,6 +135,8 @@ export function updatePrintStatus(params: {
   btPrintCnt?: number
   nbzPrintCnt?: number
   wbzPrintCnt?: number
+  codeSn?: string
+  printerId?: string
 }): Promise<any> {
   return request.post('/pc/editprint', params)
 }
@@ -244,4 +246,49 @@ export function getBtPrintInfo(params: {
   operator: string
 }): Promise<any> {
   return request.post('/pc/btprint', null, { params })
+}
+
+/**
+ * 本体码打印
+ */
+export function printBt(params: {
+  btPrintCnt: number
+  codeSn: string
+  id: number
+  nbzPrintCnt: number
+  operator: string
+  printerId: string
+  wbzPrintCnt: number
+}): Promise<any> {
+  return request.post('/barcode/print/bt', params)
+}
+
+/**
+ * 内包装码打印
+ */
+export function printNbz(params: {
+  btPrintCnt: number
+  codeSn: string
+  id: number
+  nbzPrintCnt: number
+  operator: string
+  printerId: string
+  wbzPrintCnt: number
+}): Promise<any> {
+  return request.post('/barcode/print/nbz', params)
+}
+
+/**
+ * 外包装码打印
+ */
+export function printWbz(params: {
+  btPrintCnt: number
+  codeSn: string
+  id: number
+  nbzPrintCnt: number
+  operator: string
+  printerId: string
+  wbzPrintCnt: number
+}): Promise<any> {
+  return request.post('/barcode/print/wbz', params)
 }

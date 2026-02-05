@@ -31,6 +31,24 @@ const Scan = () => {
     return () => clearTimeout(timer)
   }, [])
 
+  // 点击页面任何位置都自动对焦到输入框
+  useEffect(() => {
+    const handlePageClick = () => {
+      // 确保输入框存在且未被禁用时才对焦
+      if (inputRef.current && !loading) {
+        inputRef.current.focus()
+      }
+    }
+
+    // 监听整个文档的点击事件
+    document.addEventListener('click', handlePageClick)
+    
+    // 组件卸载时移除监听器
+    return () => {
+      document.removeEventListener('click', handlePageClick)
+    }
+  }, [loading])
+
   // 暂时注释扫码功能 - 开始
   // const handleScan = useCallback((code: string) => {
   //   Toast.show({ 
@@ -249,12 +267,12 @@ const Scan = () => {
             </div>
           </div>
 
-          {/* {manualCode && (
+          {manualCode && (
             <div className={styles.codePreview}>
               <div className={styles.previewLabel}>当前条码：</div>
               <div className={styles.previewCode}>{manualCode}</div>
             </div>
-          )} */}
+          )}
         </div>
       </div>
     </PageContainer>
